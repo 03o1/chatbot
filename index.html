@@ -3,14 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Anas Chat Social - Admin Panel & Chat</title>
+    <title>Anas Chat Social - User Panel</title>
     <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
     <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background: #060913; color: #f8fafc; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
 
-        /* Auth Overlay */
         #authOverlay { position: fixed; inset: 0; background: radial-gradient(circle at center, #0f172a 0%, #020617 100%); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
         .auth-box { background: #1e293b; border: 1px solid #334155; padding: 30px; border-radius: 16px; width: 100%; max-width: 400px; box-shadow: 0 20px 50px rgba(0,0,0,0.7); text-align: center; }
         .auth-box h1 { color: #38bdf8; font-size: 26px; margin-bottom: 5px; letter-spacing: 1px; }
@@ -28,7 +27,6 @@
         .auth-btn:hover { background: #0369a1; }
         .error-text { color: #f87171; font-size: 12px; margin-top: 10px; min-height: 16px; }
 
-        /* Header */
         header { background: #0f172a; padding: 12px 24px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1e293b; }
         .logo { font-size: 19px; font-weight: 800; color: #38bdf8; display: flex; align-items: center; gap: 8px; }
         .badge { background: #10b981; color: #020617; font-size: 10px; padding: 2px 7px; border-radius: 4px; font-weight: 800; }
@@ -36,13 +34,11 @@
         .logout-btn { background: #ef4444; color: white; border: none; padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: bold; }
 
         .app-body { flex: 1; display: flex; overflow: hidden; }
-
-        /* Sidebar */
         .sidebar { width: 340px; background: #0f172a; border-right: 1px solid #1e293b; display: flex; flex-direction: column; overflow: hidden; }
-        .tabs { display: flex; border-bottom: 1px solid #1e293b; background: #131c31; flex-wrap: wrap; }
-        .tab-btn { flex: 1; min-width: 70px; padding: 10px 4px; background: none; border: none; color: #94a3b8; font-size: 11px; font-weight: bold; cursor: pointer; border-bottom: 2px solid transparent; text-align: center; position: relative; transition: 0.2s; }
+        .tabs { display: flex; border-bottom: 1px solid #1e293b; background: #131c31; }
+        .tab-btn { flex: 1; padding: 12px 8px; background: none; border: none; color: #94a3b8; font-size: 12px; font-weight: bold; cursor: pointer; border-bottom: 2px solid transparent; text-align: center; position: relative; transition: 0.2s; }
         .tab-btn.active { color: #38bdf8; border-bottom-color: #38bdf8; background: rgba(56, 189, 248, 0.05); }
-        .tab-badge { background: #ef4444; color: white; font-size: 9px; padding: 1px 5px; border-radius: 10px; margin-left: 2px; display: none; }
+        .tab-badge { background: #ef4444; color: white; font-size: 10px; padding: 1px 6px; border-radius: 10px; margin-left: 4px; display: none; }
 
         .list-container { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
         .user-card { padding: 12px; border-radius: 10px; background: #1e293b; border: 1px solid #283548; display: flex; align-items: center; justify-content: space-between; transition: 0.2s; }
@@ -57,16 +53,13 @@
         .u-name { font-size: 14px; font-weight: 600; color: #f8fafc; }
         .u-id { font-size: 11px; color: #94a3b8; }
 
-        .btn-sm { padding: 5px 10px; border-radius: 6px; border: none; font-size: 11px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn-sm { padding: 6px 12px; border-radius: 6px; border: none; font-size: 12px; font-weight: bold; cursor: pointer; transition: 0.2s; }
         .btn-add { background: #0284c7; color: white; }
         .btn-sent { background: #334155; color: #94a3b8; cursor: default; }
         .btn-accept { background: #10b981; color: #020617; }
-        .btn-reject { background: #ef4444; color: white; margin-left: 3px; }
-        .btn-danger { background: #ef4444; color: white; }
-        .btn-warning { background: #f59e0b; color: #020617; }
+        .btn-reject { background: #ef4444; color: white; margin-left: 4px; }
         .unread-dot { width: 10px; height: 10px; background: #ef4444; border-radius: 50%; box-shadow: 0 0 8px #ef4444; }
 
-        /* Chat Window */
         .chat-window { flex: 1; display: flex; flex-direction: column; background: #060913; }
         .chat-header { padding: 12px 20px; background: #0f172a; border-bottom: 1px solid #1e293b; display: flex; justify-content: space-between; align-items: center; min-height: 62px; }
         .active-user-title { font-size: 16px; font-weight: bold; color: #f8fafc; }
@@ -90,7 +83,6 @@
         .msg audio { max-width: 230px; height: 35px; margin-top: 5px; }
         .file-box { display: inline-flex; align-items: center; gap: 8px; background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: 8px; margin-top: 5px; color: white; text-decoration: none; font-size: 13px; border: 1px solid rgba(255,255,255,0.2); }
 
-        /* Input Bar */
         .input-bar { padding: 12px 20px; background: #0f172a; border-top: 1px solid #1e293b; display: flex; align-items: center; gap: 10px; }
         .tool-btn { background: #1e293b; border: 1px solid #334155; color: #cbd5e1; width: 40px; height: 40px; border-radius: 8px; font-size: 17px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
         .tool-btn:hover { background: #334155; color: #38bdf8; }
@@ -99,20 +91,14 @@
         .msg-input:focus { border-color: #38bdf8; }
         .send-btn { background: #0284c7; color: white; border: none; padding: 0 20px; height: 40px; border-radius: 8px; font-weight: bold; cursor: pointer; }
         .send-btn:hover { background: #0369a1; }
-
-        @media (max-width: 768px) {
-            .app-body { flex-direction: column; }
-            .sidebar { width: 100%; height: 260px; border-right: none; border-bottom: 1px solid #1e293b; }
-        }
     </style>
 </head>
 <body>
 
-<!-- AUTH OVERLAY -->
 <div id="authOverlay">
     <div class="auth-box">
         <h1>ANAS CHAT</h1>
-        <p>Connect with friends & manage platform</p>
+        <p>User Sign In / Sign Up Panel</p>
         
         <div class="auth-tabs">
             <button class="auth-tab active" id="btnTabSignIn" onclick="switchAuthMode('signin')">Sign In</button>
@@ -128,11 +114,11 @@
 
         <div class="form-group">
             <label>Username (ID)</label>
-            <input type="text" id="regId" class="auth-input" placeholder="e.g. anas786 (Tip: use 'admin' for admin panel)">
+            <input type="text" id="regId" class="auth-input" placeholder="e.g. anas786">
         </div>
 
         <div class="form-group">
-            <label>Secret Password (Key)</label>
+            <label>Password</label>
             <input type="password" id="regPass" class="auth-input" placeholder="Enter your password">
         </div>
         
@@ -141,9 +127,8 @@
     </div>
 </div>
 
-<!-- MAIN PLATFORM -->
 <header>
-    <div class="logo">ANAS CHAT <span class="badge">ADMIN v4.2</span></div>
+    <div class="logo">ANAS CHAT <span class="badge">USER PANEL</span></div>
     <div class="user-pill">
         <span id="pillInfo">Connecting...</span>
         <button class="logout-btn" onclick="logoutUser()">Logout</button>
@@ -152,11 +137,10 @@
 
 <div class="app-body">
     <div class="sidebar">
-        <div class="tabs" id="sidebarTabs">
+        <div class="tabs">
             <button class="tab-btn active" id="tabFriends" onclick="switchTab('friends')">Friends <span class="tab-badge" id="badgeFriends">0</span></button>
             <button class="tab-btn" id="tabOnline" onclick="switchTab('online')">Online <span class="tab-badge" id="badgeOnline" style="background:#0284c7; display:inline-block;">0</span></button>
-            <button class="tab-btn" id="tabRequests" onclick="switchTab('requests')">Reqs <span class="tab-badge" id="badgeRequests">0</span></button>
-            <button class="tab-btn" id="tabAdmin" onclick="switchTab('admin')" style="display: none; color: #f59e0b;">👑 Admin</button>
+            <button class="tab-btn" id="tabRequests" onclick="switchTab('requests')">Requests <span class="tab-badge" id="badgeRequests">0</span></button>
         </div>
 
         <div class="list-container" id="sidebarList"></div>
@@ -174,8 +158,8 @@
 
         <div class="messages-container" id="messagesContainer">
             <div class="empty-state">
-                <h2>Welcome to Anas Chat Social!</h2>
-                <p>Go to the <b>Online</b> tab on the left to add friends and start chatting. If you logged in as <b>admin</b>, you can manage all users from the <b>👑 Admin</b> tab.</p>
+                <h2>Welcome to Anas Chat!</h2>
+                <p>Go to the <b>Online</b> tab on the left to add friends and start chatting.</p>
             </div>
         </div>
 
@@ -219,17 +203,14 @@
     let isRecording = false;
     let typingTimeout = null;
 
-    function switchAuthMode(mode) {
-        authMode = mode;
-        const isUp = (mode === 'signup');
-        document.getElementById('btnTabSignIn').classList.toggle('active', !isUp);
-        document.getElementById('btnTabSignUp').classList.toggle('active', isUp);
-        document.getElementById('signUpFields').style.display = isUp ? 'block' : 'none';
-        document.getElementById('authSubmitBtn').innerText = isUp ? 'Sign Up & Create Account' : 'Sign In';
-        document.getElementById('authError').innerText = '';
-    }
-
+    // Seed default pre-made admin account in localStorage on load
     window.addEventListener('DOMContentLoaded', () => {
+        let accountsDB = JSON.parse(localStorage.getItem('anas_accounts_db') || '{}');
+        if (!accountsDB['anas_admin_99']) {
+            accountsDB['anas_admin_99'] = { name: 'Super Admin', id: 'anas_admin_99', pass: 'super_secret_admin_786', status: 'active' };
+            localStorage.setItem('anas_accounts_db', JSON.stringify(accountsDB));
+        }
+
         const saved = localStorage.getItem('anas_social_user_profile');
         const savedFriends = localStorage.getItem('anas_social_friends');
         const savedChats = localStorage.getItem('anas_social_chats');
@@ -244,35 +225,37 @@
         }
     });
 
+    function switchAuthMode(mode) {
+        authMode = mode;
+        const isUp = (mode === 'signup');
+        document.getElementById('btnTabSignIn').classList.toggle('active', !isUp);
+        document.getElementById('btnTabSignUp').classList.toggle('active', isUp);
+        document.getElementById('signUpFields').style.display = isUp ? 'block' : 'none';
+        document.getElementById('authSubmitBtn').innerText = isUp ? 'Sign Up & Create Account' : 'Sign In';
+        document.getElementById('authError').innerText = '';
+    }
+
     function handleAuthSubmit() {
         const rawId = document.getElementById('regId').value.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
         const pass = document.getElementById('regPass').value.trim();
         const errBox = document.getElementById('authError');
 
-        if (!rawId || !pass) {
-            errBox.innerText = 'Please enter Username and Password.';
-            return;
-        }
+        if (!rawId || !pass) { errBox.innerText = 'Please enter Username and Password.'; return; }
 
         let accountsDB = JSON.parse(localStorage.getItem('anas_accounts_db') || '{}');
 
         if (authMode === 'signup') {
             const name = document.getElementById('regName').value.trim();
             if (!name) { errBox.innerText = 'Please enter your Display Name.'; return; }
-            if (accountsDB[rawId]) { errBox.innerText = 'Username already exists! Please Sign In.'; return; }
+            if (accountsDB[rawId]) { errBox.innerText = 'Username already exists!'; return; }
             
             myProfile = { name, id: rawId, pass, status: 'active' };
             accountsDB[rawId] = myProfile;
             localStorage.setItem('anas_accounts_db', JSON.stringify(accountsDB));
         } else {
-            if (!accountsDB[rawId]) { errBox.innerText = 'Account not found! Please Sign Up.'; return; }
+            if (!accountsDB[rawId]) { errBox.innerText = 'Account not found!'; return; }
             if (accountsDB[rawId].pass !== pass) { errBox.innerText = 'Incorrect password!'; return; }
-            
-            // Check if account is deactivated by admin
-            if (accountsDB[rawId].status === 'deactivated') {
-                errBox.innerText = 'Your account has been deactivated by the admin.';
-                return;
-            }
+            if (accountsDB[rawId].status === 'deactivated') { errBox.innerText = 'Account is deactivated by admin.'; return; }
             myProfile = accountsDB[rawId];
         }
 
@@ -291,11 +274,6 @@
     function startPlatform() {
         document.getElementById('pillInfo').innerHTML = `🟡 Connecting...`;
 
-        // If user is admin, show Admin tab
-        if (myProfile.id === 'admin') {
-            document.getElementById('tabAdmin').style.display = 'inline-block';
-        }
-
         peer = new Peer('anaschat_voice_' + myProfile.id);
         peer.on('call', async (call) => {
             const callerId = call.peer.replace('anaschat_voice_', '');
@@ -307,9 +285,7 @@
                 call.answer(localStream);
                 currentCall = call;
                 updateCallBtn(true);
-                call.on('stream', (remStream) => {
-                    document.getElementById('remoteAudio').srcObject = remStream;
-                });
+                call.on('stream', (remStream) => { document.getElementById('remoteAudio').srcObject = remStream; });
                 call.on('close', cleanupCall);
             } catch (e) {}
         });
@@ -321,14 +297,11 @@
 
         mqttClient.on('connect', () => {
             document.getElementById('pillInfo').innerHTML = `🟢 <b>${myProfile.name}</b> (@${myProfile.id})`;
-            
             mqttClient.subscribe(`${TOPIC_ROOT}/presence`);
             mqttClient.subscribe(`${TOPIC_ROOT}/inbox/${myProfile.id}`);
-
             broadcastPresence();
             setInterval(broadcastPresence, 4000);
             setInterval(pruneOfflineUsers, 5000);
-
             switchTab(Object.keys(friends).length > 0 ? 'friends' : 'online');
         });
 
@@ -343,19 +316,14 @@
                     }
                     return;
                 }
-                if (topic === `${TOPIC_ROOT}/inbox/${myProfile.id}`) {
-                    handleInboxPacket(payload);
-                }
+                if (topic === `${TOPIC_ROOT}/inbox/${myProfile.id}`) { handleInboxPacket(payload); }
             } catch (e) {}
         });
     }
 
     function broadcastPresence() {
         if (mqttClient && mqttClient.connected) {
-            mqttClient.publish(`${TOPIC_ROOT}/presence`, JSON.stringify({
-                id: myProfile.id,
-                name: myProfile.name
-            }));
+            mqttClient.publish(`${TOPIC_ROOT}/presence`, JSON.stringify({ id: myProfile.id, name: myProfile.name }));
         }
     }
 
@@ -363,10 +331,7 @@
         const now = Date.now();
         let changed = false;
         for (let uid in onlineUsers) {
-            if (now - onlineUsers[uid].lastSeen > 10000) {
-                delete onlineUsers[uid];
-                changed = true;
-            }
+            if (now - onlineUsers[uid].lastSeen > 10000) { delete onlineUsers[uid]; changed = true; }
         }
         if (changed) renderSidebar();
     }
@@ -442,37 +407,13 @@
         appendSystemMsg(targetId, `🤝 You and ${req.name} are now friends!`);
     }
 
-    function rejectRequest(targetId) {
-        delete incomingRequests[targetId];
-        renderSidebar();
-    }
-
-    // --- ADMIN PANEL FUNCTIONS ---
-    function adminToggleStatus(uid) {
-        let db = JSON.parse(localStorage.getItem('anas_accounts_db') || '{}');
-        if (db[uid]) {
-            db[uid].status = (db[uid].status === 'deactivated') ? 'active' : 'deactivated';
-            localStorage.setItem('anas_accounts_db', JSON.stringify(db));
-            renderSidebar();
-        }
-    }
-
-    function adminDeleteUser(uid) {
-        if (confirm(`Are you sure you want to delete user @${uid}?`)) {
-            let db = JSON.parse(localStorage.getItem('anas_accounts_db') || '{}');
-            delete db[uid];
-            localStorage.setItem('anas_accounts_db', JSON.stringify(db));
-            renderSidebar();
-        }
-    }
+    function rejectRequest(targetId) { delete incomingRequests[targetId]; renderSidebar(); }
 
     function switchTab(tabName) {
         currentTab = tabName;
         document.getElementById('tabFriends').classList.toggle('active', tabName === 'friends');
         document.getElementById('tabOnline').classList.toggle('active', tabName === 'online');
         document.getElementById('tabRequests').classList.toggle('active', tabName === 'requests');
-        const tAdmin = document.getElementById('tabAdmin');
-        if (tAdmin) tAdmin.classList.toggle('active', tabName === 'admin');
         renderSidebar();
     }
 
@@ -483,43 +424,29 @@
         document.getElementById('badgeOnline').innerText = Object.keys(onlineUsers).length;
         const reqCount = Object.keys(incomingRequests).length;
         const bReq = document.getElementById('badgeRequests');
-        bReq.innerText = reqCount;
-        bReq.style.display = reqCount > 0 ? 'inline-block' : 'none';
+        bReq.innerText = reqCount; bReq.style.display = reqCount > 0 ? 'inline-block' : 'none';
 
         const unreadCount = Object.values(friends).filter(f => f.unread).length;
         const bFr = document.getElementById('badgeFriends');
-        bFr.innerText = unreadCount;
-        bFr.style.display = unreadCount > 0 ? 'inline-block' : 'none';
+        bFr.innerText = unreadCount; bFr.style.display = unreadCount > 0 ? 'inline-block' : 'none';
 
         if (currentTab === 'friends') {
             const fIds = Object.keys(friends);
-            if (fIds.length === 0) {
-                list.innerHTML = `<div style="text-align:center; color:#64748b; font-size:13px; margin-top:30px;">No friends yet.<br>Check Online tab!</div>`;
-                return;
-            }
+            if (fIds.length === 0) { list.innerHTML = `<div style="text-align:center; color:#64748b; font-size:13px; margin-top:30px;">No friends yet.</div>`; return; }
             fIds.forEach(uid => {
                 const f = friends[uid];
                 const isOnline = !!onlineUsers[uid];
                 const card = document.createElement('div');
                 card.className = 'user-card clickable' + (activeChatId === uid ? ' active-chat' : '');
                 card.onclick = () => openChatWith(uid);
-                card.innerHTML = `
-                    <div class="user-left">
-                        <div class="avatar">${f.name.charAt(0).toUpperCase()}<div class="status-dot ${isOnline ? '' : 'offline'}"></div></div>
-                        <div><div class="u-name">${f.name}</div><div class="u-id">@${uid} • ${isOnline ? '<span style="color:#10b981;">Online</span>' : 'Offline'}</div></div>
-                    </div>
-                    ${f.unread ? '<div class="unread-dot"></div>' : ''}
-                `;
+                card.innerHTML = `<div class="user-left"><div class="avatar">${f.name.charAt(0).toUpperCase()}<div class="status-dot ${isOnline ? '' : 'offline'}"></div></div><div><div class="u-name">${f.name}</div><div class="u-id">@${uid}</div></div></div>${f.unread ? '<div class="unread-dot"></div>' : ''}`;
                 list.appendChild(card);
             });
         }
 
         if (currentTab === 'online') {
             const uIds = Object.keys(onlineUsers);
-            if (uIds.length === 0) {
-                list.innerHTML = `<div style="text-align:center; color:#64748b; font-size:13px; margin-top:30px;">No other users online.</div>`;
-                return;
-            }
+            if (uIds.length === 0) { list.innerHTML = `<div style="text-align:center; color:#64748b; font-size:13px; margin-top:30px;">No other users online.</div>`; return; }
             uIds.forEach(uid => {
                 const u = onlineUsers[uid];
                 const card = document.createElement('div');
@@ -529,68 +456,19 @@
                 else if (incomingRequests[uid]) actionHtml = `<button class="btn-sm btn-accept" onclick="acceptRequest('${uid}')">Accept</button>`;
                 else if (sentRequests[uid]) actionHtml = `<button class="btn-sm btn-sent">Sent</button>`;
                 else actionHtml = `<button class="btn-sm btn-add" onclick="sendFriendRequest('${uid}')">+ Add</button>`;
-
-                card.innerHTML = `
-                    <div class="user-left">
-                        <div class="avatar">${u.name.charAt(0).toUpperCase()}<div class="status-dot"></div></div>
-                        <div><div class="u-name">${u.name}</div><div class="u-id">@${uid}</div></div>
-                    </div>
-                    <div>${actionHtml}</div>
-                `;
+                card.innerHTML = `<div class="user-left"><div class="avatar">${u.name.charAt(0).toUpperCase()}<div class="status-dot"></div></div><div><div class="u-name">${u.name}</div><div class="u-id">@${uid}</div></div></div><div>${actionHtml}</div>`;
                 list.appendChild(card);
             });
         }
 
         if (currentTab === 'requests') {
             const rIds = Object.keys(incomingRequests);
-            if (rIds.length === 0) {
-                list.innerHTML = `<div style="text-align:center; color:#64748b; font-size:13px; margin-top:30px;">No pending requests.</div>`;
-                return;
-            }
+            if (rIds.length === 0) { list.innerHTML = `<div style="text-align:center; color:#64748b; font-size:13px; margin-top:30px;">No pending requests.</div>`; return; }
             rIds.forEach(uid => {
                 const r = incomingRequests[uid];
                 const card = document.createElement('div');
                 card.className = 'user-card';
-                card.innerHTML = `
-                    <div class="user-left">
-                        <div class="avatar">${r.name.charAt(0).toUpperCase()}</div>
-                        <div><div class="u-name">${r.name}</div><div class="u-id">@${uid}</div></div>
-                    </div>
-                    <div>
-                        <button class="btn-sm btn-accept" onclick="acceptRequest('${uid}')">Accept</button>
-                        <button class="btn-sm btn-reject" onclick="rejectRequest('${uid}')">✕</button>
-                    </div>
-                `;
-                list.appendChild(card);
-            });
-        }
-
-        // ADMIN TAB VIEW
-        if (currentTab === 'admin' && myProfile.id === 'admin') {
-            let db = JSON.parse(localStorage.getItem('anas_accounts_db') || '{}');
-            let uKeys = Object.keys(db);
-            if (uKeys.length === 0) {
-                list.innerHTML = `<div style="text-align:center; color:#64748b; font-size:13px; margin-top:30px;">No registered users found.</div>`;
-                return;
-            }
-            uKeys.forEach(uid => {
-                let usr = db[uid];
-                let isDeactivated = (usr.status === 'deactivated');
-                let card = document.createElement('div');
-                card.className = 'user-card';
-                card.innerHTML = `
-                    <div class="user-left">
-                        <div class="avatar" style="background: ${isDeactivated ? '#ef4444' : '#0284c7'}">${usr.name.charAt(0).toUpperCase()}</div>
-                        <div>
-                            <div class="u-name">${usr.name}</div>
-                            <div class="u-id">@${uid} • <span style="color:${isDeactivated ? '#f87171' : '#10b981'}">${isDeactivated ? 'Deactivated' : 'Active'}</span></div>
-                        </div>
-                    </div>
-                    <div>
-                        <button class="btn-sm ${isDeactivated ? 'btn-accept' : 'btn-warning'}" onclick="adminToggleStatus('${uid}')">${isDeactivated ? 'Activate' : 'Deactivate'}</button>
-                        <button class="btn-sm btn-danger" onclick="adminDeleteUser('${uid}')">Delete</button>
-                    </div>
-                `;
+                card.innerHTML = `<div class="user-left"><div class="avatar">${r.name.charAt(0).toUpperCase()}</div><div><div class="u-name">${r.name}</div><div class="u-id">@${uid}</div></div></div><div><button class="btn-sm btn-accept" onclick="acceptRequest('${uid}')">Accept</button><button class="btn-sm btn-reject" onclick="rejectRequest('${uid}')">✕</button></div>`;
                 list.appendChild(card);
             });
         }
@@ -609,13 +487,10 @@
         document.getElementById('voiceCallBtn').style.display = 'flex';
         document.getElementById('inputBar').style.opacity = '1';
         document.getElementById('inputBar').style.pointerEvents = 'auto';
-
         renderMessages(uid);
     }
 
-    function sendTypingSignal() {
-        if (activeChatId && friends[activeChatId]) sendToUser(activeChatId, { type: 'TYPING' });
-    }
+    function sendTypingSignal() { if (activeChatId && friends[activeChatId]) sendToUser(activeChatId, { type: 'TYPING' }); }
 
     function dispatchMessage(msgData) {
         if (!activeChatId || !friends[activeChatId]) return;
@@ -669,9 +544,7 @@
                 mediaRecorder.start();
                 isRecording = true;
                 btn.classList.add('rec');
-            } catch (err) {
-                alert('Mic permission required!');
-            }
+            } catch (e) { alert('Mic permission required!'); }
         } else {
             mediaRecorder.stop();
             isRecording = false;
@@ -687,14 +560,9 @@
                 currentCall = peer.call('anaschat_voice_' + activeChatId, localStream);
                 updateCallBtn(true);
                 appendSystemMsg(activeChatId, '📞 Calling...');
-                currentCall.on('stream', (remStream) => {
-                    document.getElementById('remoteAudio').srcObject = remStream;
-                    appendSystemMsg(activeChatId, '🟢 Call Connected!');
-                });
+                currentCall.on('stream', (remStream) => { document.getElementById('remoteAudio').srcObject = remStream; appendSystemMsg(activeChatId, '🟢 Call Connected!'); });
                 currentCall.on('close', cleanupCall);
-            } catch (e) {
-                alert('Call failed.');
-            }
+            } catch (e) { alert('Call failed.'); }
         } else {
             currentCall.close();
             cleanupCall();
@@ -721,10 +589,8 @@
         list.forEach(m => {
             if (m.type === 'SYS') {
                 const s = document.createElement('div');
-                s.className = 'sys-alert';
-                s.innerText = m.content;
-                box.appendChild(s);
-                return;
+                s.className = 'sys-alert'; s.innerText = m.content;
+                box.appendChild(s); return;
             }
             const div = document.createElement('div');
             div.className = 'msg ' + (m.who === 'me' ? 'my-msg' : 'peer-msg');
@@ -733,7 +599,6 @@
             else if (m.type === 'image') body = `<img src="${m.content}" onclick="window.open(this.src)">`;
             else if (m.type === 'audio') body = `<audio controls src="${m.content}"></audio>`;
             else if (m.type === 'file') body = `<a href="${m.content}" download="${m.fileName}" class="file-box">📄 ${m.fileName}</a>`;
-
             div.innerHTML = `${body}<div class="msg-meta">${m.time}</div>`;
             box.appendChild(div);
         });
