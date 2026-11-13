@@ -3,18 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Anas Chat Social - Pro Cloud Panel</title>
-    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
-    <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+    <title>Anas Chat - Social Pro Platform</title>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        :root { --bg-color: #060913; --panel-bg: #0f172a; --card-bg: #1e293b; --accent: #0284c7; --accent-hover: #0369a1; --text: #f8fafc; --text-dim: #94a3b8; --border: #334155; }
-        body { background: var(--bg-color); color: var(--text); height: 100vh; display: flex; flex-direction: column; overflow: hidden; transition: background 0.3s; background-size: cover; background-position: center; background-attachment: fixed; }
+        :root { --bg-color: #060913; --panel-bg: rgba(15, 23, 42, 0.95); --card-bg: rgba(30, 41, 59, 0.9); --accent: #0284c7; --accent-hover: #0369a1; --text: #f8fafc; --text-dim: #94a3b8; --border: #334155; }
+        body { background-color: var(--bg-color); color: var(--text); height: 100vh; display: flex; flex-direction: column; overflow: hidden; background-size: cover; background-position: center; background-attachment: fixed; box-shadow: inset 0 0 0 2000px rgba(3, 7, 18, 0.7); }
 
         #authOverlay { position: fixed; inset: 0; background: radial-gradient(circle at center, #0f172a 0%, #020617 100%); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
-        .auth-box { background: var(--card-bg); border: 1px solid var(--border); padding: 30px; border-radius: 16px; width: 100%; max-width: 400px; box-shadow: 0 20px 50px rgba(0,0,0,0.7); text-align: center; }
+        .auth-box { background: #1e293b; border: 1px solid var(--border); padding: 30px; border-radius: 16px; width: 100%; max-width: 400px; box-shadow: 0 20px 50px rgba(0,0,0,0.7); text-align: center; }
         .auth-box h1 { color: #38bdf8; font-size: 26px; margin-bottom: 5px; }
         .auth-box p { color: var(--text-dim); font-size: 13px; margin-bottom: 20px; }
         
@@ -24,76 +22,69 @@
 
         .form-group { text-align: left; margin-bottom: 14px; }
         .form-group label { display: block; font-size: 12px; color: #cbd5e1; margin-bottom: 5px; font-weight: 600; }
-        .auth-input { width: 100%; background: var(--panel-bg); border: 1px solid var(--border); color: white; padding: 11px 14px; border-radius: 8px; outline: none; font-size: 14px; }
-        .auth-input:focus { border-color: #38bdf8; }
-        .auth-btn { width: 100%; background: var(--accent); color: white; border: none; padding: 12px; border-radius: 8px; font-size: 15px; font-weight: bold; cursor: pointer; margin-top: 5px; transition: 0.2s; }
-        .auth-btn:hover { background: var(--accent-hover); }
-        .error-text { color: #f87171; font-size: 12px; margin-top: 10px; min-height: 16px; }
+        .auth-input { width: 100%; background: #0f172a; border: 1px solid var(--border); color: white; padding: 11px 14px; border-radius: 8px; outline: none; font-size: 14px; }
+        .auth-btn { width: 100%; background: var(--accent); color: white; border: none; padding: 12px; border-radius: 8px; font-size: 15px; font-weight: bold; cursor: pointer; margin-top: 5px; }
 
         header { background: var(--panel-bg); padding: 10px 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 10px; }
         .logo { font-size: 18px; font-weight: 800; color: #38bdf8; display: flex; align-items: center; gap: 8px; }
         .badge { background: #10b981; color: #020617; font-size: 10px; padding: 2px 7px; border-radius: 4px; font-weight: 800; }
         
         .header-controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-        .user-pill { background: var(--card-bg); padding: 5px 12px; border-radius: 20px; font-size: 12px; border: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
+        .user-pill { background: rgba(30, 41, 59, 0.95); padding: 5px 12px; border-radius: 20px; font-size: 12px; border: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
         .ctrl-btn, .logout-btn { background: #334155; color: white; border: none; padding: 5px 10px; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: bold; }
         .logout-btn { background: #ef4444; }
 
         .app-body { flex: 1; display: flex; overflow: hidden; position: relative; }
-        .sidebar { width: 320px; background: var(--panel-bg); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; transition: 0.3s; }
+        .sidebar { width: 340px; background: var(--panel-bg); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
         .tabs { display: flex; border-bottom: 1px solid var(--border); background: #131c31; }
         .tab-btn { flex: 1; padding: 12px 8px; background: none; border: none; color: var(--text-dim); font-size: 12px; font-weight: bold; cursor: pointer; border-bottom: 2px solid transparent; text-align: center; }
         .tab-btn.active { color: #38bdf8; border-bottom-color: #38bdf8; background: rgba(56, 189, 248, 0.05); }
 
         .list-container { flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
-        .user-card { padding: 10px 12px; border-radius: 10px; background: var(--card-bg); border: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: 0.2s; }
+        .user-card { padding: 10px 12px; border-radius: 10px; background: var(--card-bg); border: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
         .user-card:hover { background: #263349; }
-        .user-card.active-chat { background: #0c4a6e; border-color: #38bdf8; }
 
         .user-left { display: flex; align-items: center; gap: 10px; }
-        .avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--accent); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; overflow: hidden; }
+        .avatar { width: 38px; height: 38px; border-radius: 50%; background: var(--accent); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; overflow: hidden; }
         .avatar img { width: 100%; height: 100%; object-fit: cover; }
         .u-name { font-size: 13px; font-weight: 600; color: var(--text); }
-        .u-id { font-size: 11px; color: var(--text-dim); }
-        
-        .unread-badge { background: #ef4444; color: white; font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 10px; min-width: 18px; text-align: center; }
+        .u-status { font-size: 11px; font-weight: bold; }
+        .status-online { color: #10b981; }
+        .status-offline { color: #ef4444; }
 
-        .chat-window { flex: 1; display: flex; flex-direction: column; background: rgba(6, 9, 19, 0.85); backdrop-filter: blur(5px); }
-        .chat-header { padding: 10px 16px; background: var(--panel-bg); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; min-height: 56px; }
-        .active-user-title { font-size: 15px; font-weight: bold; color: var(--text); display: flex; align-items: center; gap: 10px; }
-        .back-to-users { display: none; background: #334155; color: white; border: none; padding: 5px 10px; border-radius: 6px; font-size: 12px; cursor: pointer; }
+        .action-chip { padding: 5px 10px; border-radius: 6px; font-size: 11px; font-weight: bold; border: none; cursor: pointer; }
+        .btn-req { background: #0284c7; color: white; }
+        .btn-acc { background: #10b981; color: white; }
+        .btn-chat { background: #8b5cf6; color: white; }
 
-        .messages-container { flex: 1; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
-        .empty-state { margin: auto; text-align: center; color: var(--text-dim); max-width: 320px; padding: 20px; }
-        .empty-state h2 { color: #38bdf8; margin-bottom: 6px; font-size: 18px; }
+        /* Main Feed & Chat Area */
+        .main-content { flex: 1; display: flex; flex-direction: column; background: rgba(6, 9, 19, 0.5); overflow: hidden; }
+        .feed-container { flex: 1; overflow-y: auto; padding: 20px; display: none; flex-direction: column; gap: 16px; max-width: 600px; margin: 0 auto; width: 100%; }
+        .feed-container.active { display: flex; }
 
-        .msg { max-width: 75%; padding: 10px 14px; border-radius: 12px; font-size: 13px; line-height: 1.4; word-wrap: break-word; }
-        .my-msg { align-self: flex-end; background: var(--accent); color: white; border-bottom-right-radius: 2px; }
-        .peer-msg { align-self: flex-start; background: var(--card-bg); color: var(--text); border: 1px solid var(--border); border-bottom-left-radius: 2px; }
+        .create-post-box { background: var(--card-bg); border: 1px solid var(--border); padding: 15px; border-radius: 12px; display: flex; flex-direction: column; gap: 10px; }
+        .create-post-box textarea { width: 100%; background: #0f172a; border: 1px solid var(--border); color: white; padding: 10px; border-radius: 8px; resize: none; height: 70px; outline: none; }
+        .post-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+        .post-header { display: flex; align-items: center; gap: 10px; }
+        .post-img { width: 100%; max-height: 300px; object-fit: cover; border-radius: 8px; margin-top: 6px; }
+        .post-actions { display: flex; gap: 15px; font-size: 13px; color: var(--text-dim); border-top: 1px solid var(--border); padding-top: 8px; cursor: pointer; }
+        .comments-section { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
+        .comment-item { background: #0f172a; padding: 6px 10px; border-radius: 6px; font-size: 12px; }
 
-        .input-bar { padding: 10px 16px; background: var(--panel-bg); border-top: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
-        .msg-input { flex: 1; background: var(--card-bg); border: 1px solid var(--border); color: white; padding: 10px 14px; border-radius: 8px; outline: none; font-size: 13px; }
-        .send-btn { background: var(--accent); color: white; border: none; padding: 0 16px; height: 40px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 13px; }
+        .chat-area { flex: 1; display: none; flex-direction: column; }
+        .chat-area.active { display: flex; }
+        .chat-header { padding: 12px 16px; background: var(--panel-bg); border-bottom: 1px solid var(--border); font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+        .messages-box { flex: 1; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+        .msg { max-width: 75%; padding: 10px 14px; border-radius: 12px; font-size: 13px; word-wrap: break-word; }
+        .my-msg { align-self: flex-end; background: var(--accent); color: white; }
+        .peer-msg { align-self: flex-start; background: var(--card-bg); border: 1px solid var(--border); }
+        .input-bar { padding: 10px 16px; background: var(--panel-bg); border-top: 1px solid var(--border); display: flex; gap: 8px; }
+        .msg-input { flex: 1; background: var(--card-bg); border: 1px solid var(--border); color: white; padding: 10px; border-radius: 8px; outline: none; }
+        .send-btn { background: var(--accent); color: white; border: none; padding: 0 16px; border-radius: 8px; font-weight: bold; cursor: pointer; }
 
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 2000; align-items: center; justify-content: center; padding: 20px; }
-        .modal-content { background: var(--card-bg); border: 1px solid var(--border); padding: 24px; border-radius: 12px; width: 100%; max-width: 380px; text-align: center; max-height: 90vh; overflow-y: auto; }
-        .modal-content h3 { color: #38bdf8; margin-bottom: 12px; font-size: 18px; }
-        .modal-content input { width: 100%; padding: 10px; background: var(--panel-bg); border: 1px solid var(--border); color: white; border-radius: 6px; margin-bottom: 12px; font-size: 13px; }
-        .preset-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 12px; }
-        .preset-thumb { height: 50px; border-radius: 6px; background-size: cover; background-position: center; cursor: pointer; border: 2px solid transparent; }
-        .preset-thumb:hover { border-color: #38bdf8; }
-
-        .modal-btns { display: flex; gap: 8px; }
-        .modal-btns button { flex: 1; padding: 10px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; font-size: 13px; }
-        .btn-save { background: #10b981; color: #020617; }
-        .btn-close { background: #ef4444; color: white; }
-
-        @media (max-width: 768px) {
-            .sidebar { position: absolute; inset: 0; z-index: 10; width: 100%; display: flex; }
-            .sidebar.hidden { display: none; }
-            .chat-window { width: 100%; }
-            .back-to-users { display: inline-block; }
-        }
+        .modal-content { background: var(--card-bg); border: 1px solid var(--border); padding: 24px; border-radius: 12px; width: 100%; max-width: 380px; text-align: center; }
+        .modal-content input { width: 100%; padding: 10px; background: #0f172a; border: 1px solid var(--border); color: white; border-radius: 6px; margin-bottom: 12px; }
     </style>
 </head>
 <body>
@@ -101,125 +92,82 @@
 <div id="authOverlay">
     <div class="auth-box">
         <h1>ANAS CHAT</h1>
-        <p>Pro Cloud Portal</p>
-        
+        <p>Social Community Portal</p>
         <div class="auth-tabs">
             <button class="auth-tab active" id="btnTabSignIn" onclick="switchAuthMode('signin')">Sign In</button>
             <button class="auth-tab" id="btnTabSignUp" onclick="switchAuthMode('signup')">Sign Up</button>
         </div>
-
         <div id="signUpFields" style="display: none;">
-            <div class="form-group">
-                <label>Display Name</label>
-                <input type="text" id="regName" class="auth-input" placeholder="e.g. Anas Khan">
-            </div>
+            <div class="form-group"><label>Display Name</label><input type="text" id="regName" class="auth-input"></div>
         </div>
-
-        <div class="form-group">
-            <label>Username (ID)</label>
-            <input type="text" id="regId" class="auth-input" placeholder="e.g. anas786">
-        </div>
-
-        <div class="form-group">
-            <label>Password</label>
-            <input type="password" id="regPass" class="auth-input" placeholder="Password">
-        </div>
-        
+        <div class="form-group"><label>Username ID</label><input type="text" id="regId" class="auth-input"></div>
+        <div class="form-group"><label>Password</label><input type="password" id="regPass" class="auth-input"></div>
         <button class="auth-btn" id="authSubmitBtn" onclick="handleAuthSubmit()">Sign In</button>
-        <div class="error-text" id="authError"></div>
+        <div id="authError" style="color:#f87171; font-size:12px; margin-top:10px;"></div>
     </div>
 </div>
 
 <header>
-    <div class="logo">ANAS CHAT <span class="badge">PRO</span></div>
+    <div class="logo">ANAS SOCIAL <span class="badge">LIVE</span></div>
     <div class="header-controls">
+        <button class="ctrl-btn" onclick="switchView('feed')">📰 News Feed</button>
         <button class="ctrl-btn" onclick="openProfileModal()">👤 Profile</button>
         <button class="ctrl-btn" onclick="openBgModal()">🎨 Theme</button>
-        <div class="user-pill">
-            <span id="pillInfo">Connecting...</span>
-            <button class="logout-btn" onclick="logoutUser()">Logout</button>
-        </div>
+        <div class="user-pill"><span id="pillInfo">...</span><button class="logout-btn" onclick="logoutUser()">Logout</button></div>
     </div>
 </header>
 
 <div class="app-body">
-    <div class="sidebar" id="sidebarPanel">
+    <div class="sidebar">
         <div class="tabs">
-            <button class="tab-btn active">Active Friends</button>
+            <button class="tab-btn active">Community Users</button>
         </div>
-        <div class="list-container" id="sidebarList">
-            <div style="color:var(--text-dim); text-align:center; padding:20px; font-size:13px;">Loading users...</div>
-        </div>
+        <div class="list-container" id="sidebarList"></div>
     </div>
 
-    <div class="chat-window">
-        <div class="chat-header">
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <button class="back-to-users" onclick="toggleSidebar(true)">← Users</button>
-                <div class="active-user-title" id="chatTitle">
-                    <div class="avatar" id="headerAvatar" style="display:none; width:30px; height:30px;"></div>
-                    <span id="chatTitleText">Select a User to Chat</span>
+    <div class="main-content">
+        <!-- News Feed View -->
+        <div class="feed-container active" id="feedView">
+            <div class="create-post-box">
+                <textarea id="postText" placeholder="What's on your mind?"></textarea>
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <input type="file" id="postImageFile" accept="image/*" style="font-size:11px; color:var(--text-dim);">
+                    <button class="action-chip btn-req" onclick="createPost()">Post</button>
                 </div>
             </div>
+            <div id="postsFeedList" style="display:flex; flex-direction:column; gap:12px;"></div>
         </div>
-        <div class="messages-container" id="messagesContainer">
-            <div class="empty-state">
-                <h2>Anas Chat Secure</h2>
-                <p>Select any user from the list to start real-time messaging.</p>
+
+        <!-- Chat Area View -->
+        <div class="chat-area" id="chatAreaView">
+            <div class="chat-header" id="chatHeaderTitle">Select a friend to start chatting</div>
+            <div class="messages-box" id="messagesContainer">
+                <div style="margin:auto; color:var(--text-dim); text-align:center;">Friend request accept hone ke baad chat shuru hogi.</div>
+            </div>
+            <div class="input-bar">
+                <input type="text" id="msgInput" class="msg-input" placeholder="Type a message..." disabled>
+                <button class="send-btn" id="sendBtn" onclick="sendMessage()" disabled>Send</button>
             </div>
         </div>
-        <div class="input-bar">
-            <input type="text" id="msgInput" class="msg-input" placeholder="Type a message..." disabled>
-            <button class="send-btn" id="sendBtn" onclick="sendMessage()" disabled>Send</button>
-        </div>
     </div>
 </div>
 
-<!-- Theme / Background Customizer Modal -->
+<!-- Modals -->
 <div class="modal" id="bgModal">
     <div class="modal-content">
-        <h3>Choose Theme Background</h3>
-        <p style="font-size:12px; color:var(--text-dim); margin-bottom:10px;">Preloaded Themes select karein ya khud upload karein:</p>
-        
-        <div class="preset-grid" id="presetGrid">
-            <!-- Preloaded HD Themes injected via JS -->
-        </div>
-
-        <div class="form-group" style="margin-top: 10px;">
-            <label>Upload Image from Device (JPG/PNG)</label>
-            <input type="file" id="bgFile" class="auth-input" accept="image/*" style="padding: 6px;">
-        </div>
-        <div class="form-group">
-            <label>Or Enter Direct Image URL</label>
-            <input type="text" id="bgInputUrl" placeholder="https://example.com/bg.jpg">
-        </div>
-        <div class="modal-btns">
-            <button class="btn-save" onclick="applyCustomBg('custom')">Apply Theme</button>
-            <button class="btn-close" onclick="closeBgModal()">Cancel</button>
-        </div>
+        <h3>Change Background Theme</h3>
+        <input type="text" id="bgInputUrl" placeholder="Image URL">
+        <div style="display:flex; gap:8px;"><button class="auth-btn" onclick="applyBg()">Apply</button><button class="auth-btn" style="background:#ef4444;" onclick="closeModal('bgModal')">Cancel</button></div>
     </div>
 </div>
 
-<!-- Profile Edit Modal -->
 <div class="modal" id="profileModal">
     <div class="modal-content">
         <h3>Edit Profile</h3>
-        <div class="form-group">
-            <label>Display Name</label>
-            <input type="text" id="editName" class="auth-input">
-        </div>
-        <div class="form-group">
-            <label>Profile Picture from Gallery</label>
-            <input type="file" id="editPicFile" class="auth-input" accept="image/*" style="padding: 7px;">
-        </div>
-        <div class="form-group">
-            <label>Password</label>
-            <input type="password" id="editPass" class="auth-input">
-        </div>
-        <div class="modal-btns" style="margin-top: 10px;">
-            <button class="btn-save" onclick="updateProfileData()">Save</button>
-            <button class="btn-close" onclick="closeProfileModal()">Cancel</button>
-        </div>
+        <input type="text" id="editName" placeholder="Name">
+        <input type="file" id="editPicFile" accept="image/*" style="margin-bottom:12px; color:var(--text-dim);">
+        <input type="password" id="editPass" placeholder="Password">
+        <div style="display:flex; gap:8px;"><button class="auth-btn" onclick="updateProfile()">Save</button><button class="auth-btn" style="background:#ef4444;" onclick="closeModal('profileModal')">Cancel</button></div>
     </div>
 </div>
 
@@ -233,147 +181,26 @@
       appId: "1:51927735471:web:5d95993d3979730c9d485a",
       measurementId: "G-VTFCGDT9KB"
     };
-
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    db.enablePersistence({ synchronizeTabs: true }).catch(err => {});
-
-    let currentUser = JSON.parse(localStorage.getItem('anas_chat_user')) || null;
+    let currentUser = JSON.parse(localStorage.getItem('anas_social_user')) || null;
     let authMode = 'signin';
     let allUsers = [];
-    let selectedUser = null;
-    let unreadCounts = {};
-    let tempPicBase64 = '';
-    let tempBgValue = '';
-
-    // Preloaded fast-loading HD background images
-    const preloadedThemes = [
-        "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800", // Beach
-        "https://images.unsplash.com/photo-1519681393784-d120267933ba?w=800", // Night Sky
-        "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=800", // Forest
-        "https://images.unsplash.com/photo-1534447677768-be436bb09401?w=800", // Neon Galaxy
-        "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800", // Space
-        "https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=800"  // Abstract Gradient
-    ];
+    let friendships = {};
+    let selectedChatUser = null;
+    let tempPostImg = '', tempProfilePic = '';
 
     window.onload = () => {
-        // Render preset thumbnails
-        const grid = document.getElementById('presetGrid');
-        preloadedThemes.forEach(url => {
-            const thumb = document.createElement('div');
-            thumb.className = 'preset-thumb';
-            thumb.style.backgroundImage = `url('${url}')`;
-            thumb.onclick = () => {
-                tempBgValue = url;
-                applyCustomBg('preset', url);
-            };
-            grid.appendChild(thumb);
-        });
+        const savedBg = localStorage.getItem('anas_social_bg');
+        if(savedBg) document.body.style.backgroundImage = `url('${savedBg}')`;
 
-        // Load saved theme
-        const savedBg = localStorage.getItem('anas_chat_bg');
-        if (savedBg) {
-            document.body.style.backgroundImage = `url('${savedBg}')`;
-        }
-
-        if (currentUser) {
+        if(currentUser) {
             document.getElementById('authOverlay').style.display = 'none';
             document.getElementById('pillInfo').innerText = `@${currentUser.id}`;
-            loadUsersFromCloud();
-            listenToAllUnreadMessages();
+            initApp();
         }
-
-        // Handle profile picture file selection
-        document.getElementById('editPicFile').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) { tempPicBase64 = e.target.result; };
-                reader.readAsDataURL(file);
-            }
-        });
-
-        // Handle custom background file upload
-        document.getElementById('bgFile').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    tempBgValue = e.target.result;
-                };
-                reader.readAsDataURL(file);
-            }
-        });
     };
-
-    function openBgModal() { document.getElementById('bgModal').style.display = 'flex'; }
-    function closeBgModal() { document.getElementById('bgModal').style.display = 'none'; }
-    
-    function openProfileModal() {
-        document.getElementById('editName').value = currentUser.name || '';
-        document.getElementById('editPass').value = currentUser.pass || '';
-        tempPicBase64 = currentUser.pic || '';
-        document.getElementById('profileModal').style.display = 'flex';
-    }
-    function closeProfileModal() { document.getElementById('profileModal').style.display = 'none'; }
-
-    async function applyCustomBg(type, val = '') {
-        let finalVal = val;
-        if (type === 'custom') {
-            const urlInput = document.getElementById('bgInputUrl').value.trim();
-            if (urlInput) finalVal = urlInput;
-            else if (tempBgValue) finalVal = tempBgValue;
-        }
-
-        if (!finalVal) { alert('Koi image select ya URL enter karein!'); return; }
-
-        localStorage.setItem('anas_chat_bg', finalVal);
-        document.body.style.backgroundImage = `url('${finalVal}')`;
-        closeBgModal();
-
-        // Save theme info to Firestore so Admin can track and control it
-        if (currentUser) {
-            const isLink = finalVal.startsWith('http');
-            await db.collection('used_themes').add({
-                userId: currentUser.id,
-                userName: currentUser.name,
-                type: isLink ? 'link' : 'file',
-                value: finalVal,
-                visibleToPublic: true, // Default visible
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            }).catch(err => console.log(err));
-        }
-    }
-
-    async function updateProfileData() {
-        const newName = document.getElementById('editName').value.trim();
-        const newPass = document.getElementById('editPass').value.trim();
-        if (!newName || !newPass) { alert('Name aur Password lazmi hain!'); return; }
-
-        try {
-            const updateData = { name: newName, pass: newPass };
-            if (tempPicBase64) updateData.pic = tempPicBase64;
-
-            await db.collection('users').doc(currentUser.id).update(updateData);
-            currentUser.name = newName;
-            currentUser.pass = newPass;
-            if (tempPicBase64) currentUser.pic = tempPicBase64;
-
-            localStorage.setItem('anas_chat_user', JSON.stringify(currentUser));
-            alert('Profile update ho gayi!');
-            closeProfileModal();
-            loadUsersFromCloud();
-        } catch (e) {
-            alert('Error: ' + e.message);
-        }
-    }
-
-    function toggleSidebar(show) {
-        const sb = document.getElementById('sidebarPanel');
-        if (show) sb.classList.remove('hidden');
-        else sb.classList.add('hidden');
-    }
 
     function switchAuthMode(mode) {
         authMode = mode;
@@ -381,195 +208,264 @@
         document.getElementById('btnTabSignUp').className = mode === 'signup' ? 'auth-tab active' : 'auth-tab';
         document.getElementById('signUpFields').style.display = mode === 'signup' ? 'block' : 'none';
         document.getElementById('authSubmitBtn').innerText = mode === 'signin' ? 'Sign In' : 'Sign Up';
-        document.getElementById('authError').innerText = '';
     }
 
     async function handleAuthSubmit() {
         const id = document.getElementById('regId').value.trim().toLowerCase();
         const pass = document.getElementById('regPass').value.trim();
         const name = document.getElementById('regName').value.trim();
-        const errEl = document.getElementById('authError');
+        const err = document.getElementById('authError');
+        if(!id || !pass || (authMode === 'signup' && !name)) { err.innerText = 'All fields required!'; return; }
 
-        if (!id || !pass || (authMode === 'signup' && !name)) {
-            errEl.innerText = 'Tamam fields pur karna lazmi hain!';
-            return;
+        const ref = db.collection('users').doc(id);
+        const doc = await ref.get();
+
+        if(authMode === 'signup') {
+            if(doc.exists) { err.innerText = 'Username already exists!'; return; }
+            currentUser = { id, name, pass, pic: '', status: 'online' };
+            await ref.set(currentUser);
+        } else {
+            if(!doc.exists) { err.innerText = 'User not found!'; return; }
+            currentUser = doc.data();
+            if(currentUser.pass !== pass) { err.innerText = 'Wrong password!'; return; }
+            await ref.update({ status: 'online' });
         }
-
-        const userRef = db.collection('users').doc(id);
-
-        try {
-            if (authMode === 'signup') {
-                const doc = await userRef.get();
-                if (doc.exists) {
-                    errEl.innerText = 'Yeh username pehle se mojood hai!';
-                    return;
-                }
-                const newUser = { id, name, pass, pic: '', status: 'online' };
-                await userRef.set(newUser);
-                currentUser = newUser;
-            } else {
-                const doc = await userRef.get();
-                if (!doc.exists) {
-                    errEl.innerText = 'Yeh username mojood nahi hai!';
-                    return;
-                }
-                const data = doc.data();
-                if (data.pass !== pass) {
-                    errEl.innerText = 'Galat password!';
-                    return;
-                }
-                currentUser = data;
-                await userRef.update({ status: 'online' });
-            }
-
-            localStorage.setItem('anas_chat_user', JSON.stringify(currentUser));
-            document.getElementById('authOverlay').style.display = 'none';
-            document.getElementById('pillInfo').innerText = `@${currentUser.id}`;
-            loadUsersFromCloud();
-            listenToAllUnreadMessages();
-        } catch (e) {
-            errEl.innerText = 'Error: ' + e.message;
-        }
+        localStorage.setItem('anas_social_user', JSON.stringify(currentUser));
+        document.getElementById('authOverlay').style.display = 'none';
+        document.getElementById('pillInfo').innerText = `@${currentUser.id}`;
+        initApp();
     }
 
     function logoutUser() {
-        if (currentUser) {
+        if(currentUser) {
             db.collection('users').doc(currentUser.id).update({ status: 'offline' }).finally(() => {
-                localStorage.removeItem('anas_chat_user');
+                localStorage.removeItem('anas_social_user');
                 location.reload();
             });
         }
     }
 
-    async function loadUsersFromCloud() {
-        db.collection('users').onSnapshot(snapshot => {
-            allUsers = [];
-            snapshot.forEach(doc => {
-                if (doc.id !== currentUser.id && doc.id !== 'anas_admin_99') {
-                    allUsers.push(doc.data());
-                }
-            });
-            renderUserList();
-        });
+    function initApp() {
+        loadUsersAndRelations();
+        loadFeedPosts();
     }
 
-    function listenToAllUnreadMessages() {
-        db.collection('chats').onSnapshot(snapshot => {
-            db.collection('users').get().then(snap => {
-                snap.forEach(doc => {
-                    const peerId = doc.id;
-                    if (peerId !== currentUser.id && peerId !== 'anas_admin_99') {
-                        const chatId = [currentUser.id, peerId].sort().join('_');
-                        db.collection('chats').doc(chatId).collection('messages')
-                          .where('receiver', '==', currentUser.id)
-                          .onSnapshot(msgSnap => {
-                              let unread = 0;
-                              msgSnap.forEach(mDoc => {
-                                  if (!mDoc.data().read) unread++;
-                              });
-                              unreadCounts[peerId] = unread;
-                              renderUserList();
-                          });
-                    }
-                });
-            });
-        });
-    }
-
-    function renderUserList() {
-        const listEl = document.getElementById('sidebarList');
-        listEl.innerHTML = '';
-        if (allUsers.length === 0) {
-            listEl.innerHTML = `<div style="color:var(--text-dim); text-align:center; padding:20px; font-size:13px;">Abhi koi doosra user nahi hai.</div>`;
-            return;
+    function switchView(view) {
+        if(view === 'feed') {
+            document.getElementById('feedView').classList.add('active');
+            document.getElementById('chatAreaView').classList.remove('active');
         }
+    }
 
+    function loadUsersAndRelations() {
+        db.collection('friendships').onSnapshot(snap => {
+            friendships = {};
+            snap.forEach(d => { friendships[d.id] = d.data(); });
+            db.collection('users').onSnapshot(userSnap => {
+                allUsers = [];
+                userSnap.forEach(d => {
+                    if(d.id !== currentUser.id && d.id !== 'anas_admin_99') allUsers.add ? allUsers.add(d.data()) : allUsers.push(d.data());
+                });
+                renderSidebar();
+            });
+        });
+    }
+
+    function renderSidebar() {
+        const list = document.getElementById('sidebarList');
+        list.innerHTML = '';
         allUsers.forEach(u => {
-            const card = document.createElement('div');
-            card.className = `user-card ${selectedUser && selectedUser.id === u.id ? 'active-chat' : ''}`;
-            card.onclick = () => {
-                selectChatUser(u);
-                if (window.innerWidth <= 768) toggleSidebar(false);
-            };
-            
-            const count = unreadCounts[u.id] || 0;
-            const badgeHTML = count > 0 ? `<div class="unread-badge">${count}</div>` : '';
-            const avatarHTML = u.pic ? `<img src="${u.pic}" alt="avatar">` : u.name.charAt(0).toUpperCase();
+            const pairKey = [currentUser.id, u.id].sort().join('_');
+            const rel = friendships[pairKey];
+            let actionHTML = '';
 
+            if(!rel) {
+                actionHTML = `<button class="action-chip btn-req" onclick="sendRequest('${u.id}')">Add Friend</button>`;
+            } else if(rel.status === 'pending') {
+                if(rel.sender === currentUser.id) {
+                    actionHTML = `<span style="font-size:11px; color:var(--text-dim);">Requested</span>`;
+                } else {
+                    actionHTML = `<button class="action-chip btn-acc" onclick="acceptRequest('${pairKey}')">Accept</button>`;
+                }
+            } else if(rel.status === 'accepted') {
+                actionHTML = `<button class="action-chip btn-chat" onclick="openChat('${u.id}', '${u.name}')">Chat</button>`;
+            }
+
+            const card = document.createElement('div');
+            card.className = 'user-card';
             card.innerHTML = `
                 <div class="user-left">
-                    <div class="avatar">${avatarHTML}</div>
+                    <div class="avatar">${u.pic ? `<img src="${u.pic}">` : u.name.charAt(0)}</div>
                     <div>
                         <div class="u-name">${u.name}</div>
-                        <div class="u-id">@${u.id} • <span style="color:${u.status === 'online' ? '#10b981' : '#64748b'}">${u.status}</span></div>
+                        <div class="u-status ${u.status === 'online' ? 'status-online' : 'status-offline'}">${u.status === 'online' ? 'Online' : 'Offline'}</div>
                     </div>
                 </div>
-                ${badgeHTML}
+                ${actionHTML}
             `;
-            listEl.appendChild(card);
+            list.appendChild(card);
         });
     }
 
-    function selectChatUser(user) {
-        selectedUser = user;
-        const headerAvatarEl = document.getElementById('headerAvatar');
-        headerAvatarEl.style.display = 'flex';
-        headerAvatarEl.innerHTML = user.pic ? `<img src="${user.pic}">` : user.name.charAt(0).toUpperCase();
-        document.getElementById('chatTitleText').innerText = `${user.name} (@${user.id})`;
-        
+    async function sendRequest(peerId) {
+        const pairKey = [currentUser.id, peerId].sort().join('_');
+        await db.collection('friendships').doc(pairKey).set({ sender: currentUser.id, receiver: peerId, status: 'pending' });
+    }
+
+    async function acceptRequest(pairKey) {
+        await db.collection('friendships').doc(pairKey).update({ status: 'accepted' });
+    }
+
+    function openChat(peerId, peerName) {
+        selectedChatUser = peerId;
+        document.getElementById('feedView').classList.remove('active');
+        document.getElementById('chatAreaView').classList.add('active');
+        document.getElementById('chatHeaderTitle').innerText = `Chat with ${peerName}`;
         document.getElementById('msgInput').disabled = false;
         document.getElementById('sendBtn').disabled = false;
-        
-        const chatId = [currentUser.id, user.id].sort().join('_');
-        db.collection('chats').doc(chatId).collection('messages')
-          .where('receiver', '==', currentUser.id).get().then(snap => {
-              snap.forEach(d => { d.ref.update({ read: true }); });
-          });
-        unreadCounts[user.id] = 0;
-        
-        renderUserList();
-        loadMessages();
+        loadMessages(peerId);
     }
 
     function sendMessage() {
         const input = document.getElementById('msgInput');
         const text = input.value.trim();
-        if (!text || !selectedUser) return;
-
-        const chatId = [currentUser.id, selectedUser.id].sort().join('_');
+        if(!text || !selectedChatUser) return;
+        const chatId = [currentUser.id, selectedChatUser].sort().join('_');
         db.collection('chats').doc(chatId).collection('messages').add({
-            sender: currentUser.id,
-            receiver: selectedUser.id,
-            text: text,
-            read: false,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            sender: currentUser.id, receiver: selectedChatUser, text, timestamp: firebase.firestore.FieldValue.serverTimestamp()
         });
         input.value = '';
     }
 
-    function loadMessages() {
-        if (!selectedUser) return;
-        const chatId = [currentUser.id, selectedUser.id].sort().join('_');
-        
-        db.collection('chats').doc(chatId).collection('messages')
-          .orderBy('timestamp', 'asc')
-          .onSnapshot(snapshot => {
-              const container = document.getElementById('messagesContainer');
-              container.innerHTML = '';
-              if (snapshot.empty) {
-                  container.innerHTML = `<div style="color:var(--text-dim); text-align:center; margin:auto;">Abhi koi message nahi hua. Pehla message bhejein!</div>`;
-                  return;
-              }
-              snapshot.forEach(doc => {
-                  const msg = doc.data();
-                  const div = document.createElement('div');
-                  div.className = `msg ${msg.sender === currentUser.id ? 'my-msg' : 'peer-msg'}`;
-                  div.innerText = msg.text;
-                  container.appendChild(div);
-              });
-              container.scrollTop = container.scrollHeight;
-          });
+    function loadMessages(peerId) {
+        const chatId = [currentUser.id, peerId].sort().join('_');
+        db.collection('chats').doc(chatId).collection('messages').orderBy('timestamp', 'asc').onSnapshot(snap => {
+            const box = document.getElementById('messagesContainer');
+            box.innerHTML = '';
+            snap.forEach(d => {
+                const m = d.data();
+                const div = document.createElement('div');
+                div.className = `msg ${m.sender === currentUser.id ? 'my-msg' : 'peer-msg'}`;
+                div.innerText = m.text;
+                box.appendChild(div);
+            });
+            box.scrollTop = box.scrollHeight;
+        });
     }
+
+    // Posts & Feed Functions
+    document.getElementById('postImageFile').addEventListener('change', e => {
+        const f = e.target.files[0];
+        if(f) { const r = new FileReader(); r.onload = ev => tempPostImg = ev.target.result; r.readAsDataURL(f); }
+    });
+
+    async function createPost() {
+        const text = document.getElementById('postText').value.trim();
+        if(!text && !tempPostImg) return;
+        await db.collection('posts').add({
+            userId: currentUser.id, userName: currentUser.name, text, image: tempPostImg, likes: [], timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        document.getElementById('postText').value = '';
+        tempPostImg = '';
+        document.getElementById('postImageFile').value = '';
+    }
+
+    function loadFeedPosts() {
+        db.collection('posts').orderBy('timestamp', 'desc').onSnapshot(snap => {
+            const list = document.getElementById('postsFeedList');
+            list.innerHTML = '';
+            snap.forEach(doc => {
+                const p = doc.data();
+                const pId = doc.id;
+                const isLiked = p.likes && p.likes.includes(currentUser.id);
+
+                const card = document.createElement('div');
+                card.className = 'post-card';
+                card.innerHTML = `
+                    <div class="post-header"><strong>${p.userName}</strong></div>
+                    <div>${p.text || ''}</div>
+                    ${p.image ? `<img src="${p.image}" class="post-img">` : ''}
+                    <div class="post-actions">
+                        <span onclick="toggleLike('${pId}', ${isLiked})">${isLiked ? '❤️ Liked' : '🤍 Like'} (${p.likes ? p.likes.length : 0})</span>
+                    </div>
+                    <div class="comments-section" id="comments-${pId}"></div>
+                    <div style="display:flex; gap:6px; margin-top:6px;">
+                        <input type="text" id="comment-input-${pId}" class="auth-input" placeholder="Write a comment..." style="padding:6px; font-size:12px;">
+                        <button class="action-chip btn-req" onclick="addComment('${pId}')">Send</button>
+                    </div>
+                `;
+                list.appendChild(card);
+                loadComments(pId);
+            });
+        });
+    }
+
+    async function toggleLike(pId, isLiked) {
+        const ref = db.collection('posts').doc(pId);
+        if(isLiked) {
+            await ref.update({ likes: firebase.firestore.FieldValue.arrayRemove(currentUser.id) });
+        } else {
+            await ref.update({ likes: firebase.firestore.FieldValue.arrayUnion(currentUser.id) });
+        }
+    }
+
+    async function addComment(pId) {
+        const input = document.getElementById(`comment-input-${pId}`);
+        const text = input.value.trim();
+        if(!text) return;
+        await db.collection('posts').doc(pId).collection('comments').add({
+            userId: currentUser.id, userName: currentUser.name, text, timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        input.value = '';
+    }
+
+    function loadComments(pId) {
+        db.collection('posts').doc(pId).collection('comments').orderBy('timestamp', 'asc').onSnapshot(snap => {
+            const box = document.getElementById(`comments-${pId}`);
+            box.innerHTML = '';
+            snap.forEach(d => {
+                const c = d.data();
+                const div = document.createElement('div');
+                div.className = 'comment-item';
+                div.innerHTML = `<strong>${c.userName}:</strong> ${c.text}`;
+                box.appendChild(div);
+            });
+        });
+    }
+
+    document.getElementById('editPicFile').addEventListener('change', e => {
+        const f = e.target.files[0];
+        if(f) { const r = new FileReader(); r.onload = ev => tempProfilePic = ev.target.result; r.readAsDataURL(f); }
+    });
+
+    async function updateProfile() {
+        const name = document.getElementById('editName').value.trim();
+        const pass = document.getElementById('editPass').value.trim();
+        if(!name || !pass) return;
+        const updateData = { name, pass };
+        if(tempProfilePic) updateData.pic = tempProfilePic;
+        await db.collection('users').doc(currentUser.id).update(updateData);
+        currentUser.name = name; currentUser.pass = pass; if(tempProfilePic) currentUser.pic = tempProfilePic;
+        localStorage.setItem('anas_social_user', JSON.stringify(currentUser));
+        closeModal('profileModal');
+        alert('Profile updated!');
+    }
+
+    function applyBg() {
+        const url = document.getElementById('bgInputUrl').value.trim();
+        if(!url) return;
+        localStorage.setItem('anas_social_bg', url);
+        document.body.style.backgroundImage = `url('${url}')`;
+        closeModal('bgModal');
+    }
+
+    function openProfileModal() {
+        document.getElementById('editName').value = currentUser.name;
+        document.getElementById('editPass').value = currentUser.pass;
+        document.getElementById('profileModal').style.display = 'flex';
+    }
+    function openBgModal() { document.getElementById('bgModal').style.display = 'flex'; }
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 </script>
 </body>
 </html>
