@@ -18,12 +18,13 @@
         .btn-main { width: 100%; background: #0284c7; color: white; border: none; padding: 11px; border-radius: 8px; font-weight: bold; cursor: pointer; }
         .err { color: #f87171; font-size: 12px; margin-top: 8px; }
 
-        header { background: #111827; padding: 14px 24px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1f2937; }
+        header { background: #111827; padding: 14px 24px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1f2937; flex-wrap: wrap; gap: 10px; }
         .logo { font-size: 18px; font-weight: 800; color: #38bdf8; }
         .admin-badge { background: #ef4444; color: white; font-size: 10px; padding: 3px 8px; border-radius: 4px; font-weight: bold; }
+        .header-actions { display: flex; gap: 8px; align-items: center; }
 
         .container { max-width: 1000px; margin: 20px auto; padding: 0 16px; width: 100%; flex: 1; }
-        .section-title { font-size: 18px; font-weight: bold; margin-bottom: 12px; color: #e2e8f0; display: flex; justify-content: space-between; align-items: center; }
+        .section-title { font-size: 18px; font-weight: bold; margin-bottom: 12px; color: #e2e8f0; }
         
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 24px; }
         .stat-card { background: #111827; border: 1px solid #1f2937; padding: 18px; border-radius: 10px; text-align: center; }
@@ -34,6 +35,12 @@
         th, td { padding: 12px 16px; border-bottom: 1px solid #1f2937; }
         th { background: #1f2937; color: #cbd5e1; }
         .del-btn { background: #ef4444; color: white; border: none; padding: 5px 10px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 11px; }
+        .edit-btn { background: #0284c7; color: white; border: none; padding: 5px 10px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 11px; }
+
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 2000; align-items: center; justify-content: center; padding: 20px; }
+        .modal-content { background: #111827; border: 1px solid #1f2937; padding: 24px; border-radius: 12px; width: 100%; max-width: 360px; text-align: center; }
+        .modal-content h3 { color: #38bdf8; margin-bottom: 12px; font-size: 18px; }
+        .modal-content input { width: 100%; padding: 10px; background: #030712; border: 1px solid #374151; color: white; border-radius: 6px; margin-bottom: 12px; font-size: 13px; }
     </style>
 </head>
 <body>
@@ -51,7 +58,10 @@
 
 <header>
     <div class="logo">ANAS CHAT <span class="admin-badge">ADMIN CONTROL</span></div>
-    <button class="del-btn" onclick="adminLogout()">Logout</button>
+    <div class="header-actions">
+        <button class="edit-btn" onclick="openAdminModal()">⚙️ Edit Admin Profile</button>
+        <button class="del-btn" onclick="adminLogout()">Logout</button>
+    </div>
 </header>
 
 <div class="container">
@@ -67,6 +77,7 @@
         <table>
             <thead>
                 <tr>
+                    <th>Avatar</th>
                     <th>Name</th>
                     <th>Username ID</th>
                     <th>Password</th>
@@ -75,9 +86,21 @@
                 </tr>
             </thead>
             <tbody id="usersTableBody">
-                <tr><td colspan="5" style="text-align:center; color:#9ca3af;">Loading database...</td></tr>
+                <tr><td colspan="6" style="text-align:center; color:#9ca3af;">Loading database...</td></tr>
             </tbody>
         </table>
+    </div>
+</div>
+
+<!-- Admin Profile Edit Modal -->
+<div class="modal" id="adminModal">
+    <div class="modal-content">
+        <h3>Edit Admin Password</h3>
+        <input type="password" id="newAdminPass" placeholder="New Admin Password" class="input-box">
+        <div style="display: flex; gap: 8px;">
+            <button class="btn-main" onclick="saveAdminPass()" style="background:#10b981; color:#020617;">Save</button>
+            <button class="btn-main" onclick="closeAdminModal()" style="background:#ef4444;">Cancel</button>
+        </div>
     </div>
 </div>
 
@@ -109,7 +132,10 @@
         const pass = document.getElementById('adminPass').value.trim();
         const err = document.getElementById('loginErr');
 
-        if (id === 'anas_admin_99' && pass === 'anas1234') {
+        // Check stored admin pass or default
+        const savedAdminPass = localStorage.getItem('anas_admin_pass') || 'anas1234';
+
+        if (id === 'anas_admin_99' && pass === savedAdminPass) {
             localStorage.setItem('anas_admin_logged', 'true');
             document.getElementById('adminAuth').style.display = 'none';
             fetchAdminData();
@@ -123,6 +149,17 @@
         location.reload();
     }
 
+    function openAdminModal() { document.getElementById('adminModal').style.display = 'flex'; }
+    function closeAdminModal() { document.getElementById('adminModal').style.display = 'none'; }
+
+    function saveAdminPass() {
+        const p = document.getElementById('newAdminPass').value.trim();
+        if (!p) { alert('Password empty nahi ho sakta!'); return; }
+        localStorage.setItem('anas_admin_pass', p);
+        alert('Admin password update ho gaya!');
+        closeAdminModal();
+    }
+
     function fetchAdminData() {
         db.collection('users').onSnapshot(snapshot => {
             const tbody = document.getElementById('usersTableBody');
@@ -134,8 +171,11 @@
                 if (doc.id === 'anas_admin_99') return; 
                 count++;
 
+                const avatarHTML = u.pic ? `<img src="${u.pic}" style="width:32px; height:32px; border-radius:50%; object-fit:cover;">` : `<div style="width:32px; height:32px; border-radius:50%; background:#0284c7; display:flex; align-items:center; justify-content:center; font-weight:bold; color:white;">${u.name ? u.name.charAt(0).toUpperCase() : 'U'}</div>`;
+
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
+                    <td>${avatarHTML}</td>
                     <td>${u.name || 'N/A'}</td>
                     <td>@${u.id}</td>
                     <td><code style="background:#030712; padding:3px 6px; border-radius:4px; color:#38bdf8;">${u.pass || 'N/A'}</code></td>
@@ -147,7 +187,7 @@
 
             document.getElementById('totalUsersCount').innerText = count;
             if (count === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#9ca3af;">Koi user mojood nahi hai.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#9ca3af;">Koi user mojood nahi hai.</td></tr>`;
             }
         });
     }
