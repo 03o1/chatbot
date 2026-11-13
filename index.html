@@ -51,7 +51,7 @@
         .user-card.active-chat { background: #0c4a6e; border-color: #38bdf8; }
 
         .user-left { display: flex; align-items: center; gap: 10px; }
-        .avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--accent); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; overflow: hidden; object-fit: cover; }
+        .avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--accent); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; overflow: hidden; }
         .avatar img { width: 100%; height: 100%; object-fit: cover; }
         .u-name { font-size: 13px; font-weight: 600; color: var(--text); }
         .u-id { font-size: 11px; color: var(--text-dim); }
@@ -193,8 +193,8 @@
             <input type="text" id="editName" class="auth-input">
         </div>
         <div class="form-group">
-            <label>Profile Image URL</label>
-            <input type="text" id="editPic" class="auth-input" placeholder="https://example.com/pic.jpg">
+            <label>Select Profile Picture from Gallery</label>
+            <input type="file" id="editPicFile" class="auth-input" accept="image/*" style="padding: 7px;">
         </div>
         <div class="form-group">
             <label>Password</label>
@@ -228,6 +228,7 @@
     let allUsers = [];
     let selectedUser = null;
     let unreadCounts = {};
+    let tempPicBase64 = '';
 
     window.onload = () => {
         const savedBg = localStorage.getItem('anas_chat_bg');
@@ -246,29 +247,46 @@
             loadUsersFromCloud();
             listenToAllUnreadMessages();
         }
+
+        // File input listener to convert selected gallery image into Base64
+        document.getElementById('editPicFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(uploadEvent) {
+                    tempPicBase64 = uploadEvent.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
     };
 
     function openBgModal() { document.getElementById('bgModal').style.display = 'flex'; }
     function closeBgModal() { document.getElementById('bgModal').style.display = 'none'; }
     function openProfileModal() {
         document.getElementById('editName').value = currentUser.name || '';
-        document.getElementById('editPic').value = currentUser.pic || '';
         document.getElementById('editPass').value = currentUser.pass || '';
+        tempPicBase64 = currentUser.pic || '';
         document.getElementById('profileModal').style.display = 'flex';
     }
     function closeProfileModal() { document.getElementById('profileModal').style.display = 'none'; }
 
     async function updateProfileData() {
         const newName = document.getElementById('editName').value.trim();
-        const newPic = document.getElementById('editPic').value.trim();
         const newPass = document.getElementById('editPass').value.trim();
         if (!newName || !newPass) { alert('Name aur Password lazmi hain!'); return; }
 
         try {
-            await db.collection('users').doc(currentUser.id).update({ name: newName, pic: newPic, pass: newPass });
+            const updateData = { name: newName, pass: newPass };
+            if (tempPicBase64) {
+                updateData.pic = tempPicBase64;
+            }
+
+            await db.collection('users').doc(currentUser.id).update(updateData);
             currentUser.name = newName;
-            currentUser.pic = newPic;
             currentUser.pass = newPass;
+            if (tempPicBase64) currentUser.pic = tempPicBase64;
+
             localStorage.setItem('anas_chat_user', JSON.stringify(currentUser));
             alert('Profile update ho gayi!');
             closeProfileModal();
