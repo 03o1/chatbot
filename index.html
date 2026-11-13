@@ -11,7 +11,7 @@
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         :root { --bg-color: #060913; --panel-bg: #0f172a; --card-bg: #1e293b; --accent: #0284c7; --accent-hover: #0369a1; --text: #f8fafc; --text-dim: #94a3b8; --border: #334155; }
-        body { background: var(--bg-color); color: var(--text); height: 100vh; display: flex; flex-direction: column; overflow: hidden; transition: background 0.3s; }
+        body { background: var(--bg-color); color: var(--text); height: 100vh; display: flex; flex-direction: column; overflow: hidden; transition: background 0.3s; background-size: cover; background-position: center; background-attachment: fixed; }
 
         #authOverlay { position: fixed; inset: 0; background: radial-gradient(circle at center, #0f172a 0%, #020617 100%); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
         .auth-box { background: var(--card-bg); border: 1px solid var(--border); padding: 30px; border-radius: 16px; width: 100%; max-width: 400px; box-shadow: 0 20px 50px rgba(0,0,0,0.7); text-align: center; }
@@ -76,9 +76,13 @@
         .send-btn { background: var(--accent); color: white; border: none; padding: 0 16px; height: 40px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 13px; }
 
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 2000; align-items: center; justify-content: center; padding: 20px; }
-        .modal-content { background: var(--card-bg); border: 1px solid var(--border); padding: 24px; border-radius: 12px; width: 100%; max-width: 360px; text-align: center; }
+        .modal-content { background: var(--card-bg); border: 1px solid var(--border); padding: 24px; border-radius: 12px; width: 100%; max-width: 380px; text-align: center; max-height: 90vh; overflow-y: auto; }
         .modal-content h3 { color: #38bdf8; margin-bottom: 12px; font-size: 18px; }
         .modal-content input { width: 100%; padding: 10px; background: var(--panel-bg); border: 1px solid var(--border); color: white; border-radius: 6px; margin-bottom: 12px; font-size: 13px; }
+        .preset-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 12px; }
+        .preset-thumb { height: 50px; border-radius: 6px; background-size: cover; background-position: center; cursor: pointer; border: 2px solid transparent; }
+        .preset-thumb:hover { border-color: #38bdf8; }
+
         .modal-btns { display: flex; gap: 8px; }
         .modal-btns button { flex: 1; padding: 10px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; font-size: 13px; }
         .btn-save { background: #10b981; color: #020617; }
@@ -171,14 +175,26 @@
     </div>
 </div>
 
-<!-- Background Customizer Modal -->
+<!-- Theme / Background Customizer Modal -->
 <div class="modal" id="bgModal">
     <div class="modal-content">
-        <h3>Change Background</h3>
-        <p style="font-size:12px; color:var(--text-dim); margin-bottom:12px;">Color code ya direct Image URL enter karein:</p>
-        <input type="text" id="bgInput" placeholder="e.g. #1e1b4b or https://image-url.jpg">
+        <h3>Choose Theme Background</h3>
+        <p style="font-size:12px; color:var(--text-dim); margin-bottom:10px;">Preloaded Themes select karein ya khud upload karein:</p>
+        
+        <div class="preset-grid" id="presetGrid">
+            <!-- Preloaded HD Themes injected via JS -->
+        </div>
+
+        <div class="form-group" style="margin-top: 10px;">
+            <label>Upload Image from Device (JPG/PNG)</label>
+            <input type="file" id="bgFile" class="auth-input" accept="image/*" style="padding: 6px;">
+        </div>
+        <div class="form-group">
+            <label>Or Enter Direct Image URL</label>
+            <input type="text" id="bgInputUrl" placeholder="https://example.com/bg.jpg">
+        </div>
         <div class="modal-btns">
-            <button class="btn-save" onclick="applyCustomBg()">Apply</button>
+            <button class="btn-save" onclick="applyCustomBg('custom')">Apply Theme</button>
             <button class="btn-close" onclick="closeBgModal()">Cancel</button>
         </div>
     </div>
@@ -193,7 +209,7 @@
             <input type="text" id="editName" class="auth-input">
         </div>
         <div class="form-group">
-            <label>Select Profile Picture from Gallery</label>
+            <label>Profile Picture from Gallery</label>
             <input type="file" id="editPicFile" class="auth-input" accept="image/*" style="padding: 7px;">
         </div>
         <div class="form-group">
@@ -229,16 +245,36 @@
     let selectedUser = null;
     let unreadCounts = {};
     let tempPicBase64 = '';
+    let tempBgValue = '';
+
+    // Preloaded fast-loading HD background images
+    const preloadedThemes = [
+        "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800", // Beach
+        "https://images.unsplash.com/photo-1519681393784-d120267933ba?w=800", // Night Sky
+        "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=800", // Forest
+        "https://images.unsplash.com/photo-1534447677768-be436bb09401?w=800", // Neon Galaxy
+        "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800", // Space
+        "https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=800"  // Abstract Gradient
+    ];
 
     window.onload = () => {
+        // Render preset thumbnails
+        const grid = document.getElementById('presetGrid');
+        preloadedThemes.forEach(url => {
+            const thumb = document.createElement('div');
+            thumb.className = 'preset-thumb';
+            thumb.style.backgroundImage = `url('${url}')`;
+            thumb.onclick = () => {
+                tempBgValue = url;
+                applyCustomBg('preset', url);
+            };
+            grid.appendChild(thumb);
+        });
+
+        // Load saved theme
         const savedBg = localStorage.getItem('anas_chat_bg');
         if (savedBg) {
-            if (savedBg.startsWith('http')) {
-                document.body.style.background = `url('${savedBg}') no-repeat center center fixed`;
-                document.body.style.backgroundSize = 'cover';
-            } else {
-                document.body.style.background = savedBg;
-            }
+            document.body.style.backgroundImage = `url('${savedBg}')`;
         }
 
         if (currentUser) {
@@ -248,13 +284,23 @@
             listenToAllUnreadMessages();
         }
 
-        // File input listener to convert selected gallery image into Base64
+        // Handle profile picture file selection
         document.getElementById('editPicFile').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
                 const reader = new FileReader();
-                reader.onload = function(uploadEvent) {
-                    tempPicBase64 = uploadEvent.target.result;
+                reader.onload = function(e) { tempPicBase64 = e.target.result; };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Handle custom background file upload
+        document.getElementById('bgFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    tempBgValue = e.target.result;
                 };
                 reader.readAsDataURL(file);
             }
@@ -263,6 +309,7 @@
 
     function openBgModal() { document.getElementById('bgModal').style.display = 'flex'; }
     function closeBgModal() { document.getElementById('bgModal').style.display = 'none'; }
+    
     function openProfileModal() {
         document.getElementById('editName').value = currentUser.name || '';
         document.getElementById('editPass').value = currentUser.pass || '';
@@ -271,6 +318,34 @@
     }
     function closeProfileModal() { document.getElementById('profileModal').style.display = 'none'; }
 
+    async function applyCustomBg(type, val = '') {
+        let finalVal = val;
+        if (type === 'custom') {
+            const urlInput = document.getElementById('bgInputUrl').value.trim();
+            if (urlInput) finalVal = urlInput;
+            else if (tempBgValue) finalVal = tempBgValue;
+        }
+
+        if (!finalVal) { alert('Koi image select ya URL enter karein!'); return; }
+
+        localStorage.setItem('anas_chat_bg', finalVal);
+        document.body.style.backgroundImage = `url('${finalVal}')`;
+        closeBgModal();
+
+        // Save theme info to Firestore so Admin can track and control it
+        if (currentUser) {
+            const isLink = finalVal.startsWith('http');
+            await db.collection('used_themes').add({
+                userId: currentUser.id,
+                userName: currentUser.name,
+                type: isLink ? 'link' : 'file',
+                value: finalVal,
+                visibleToPublic: true, // Default visible
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            }).catch(err => console.log(err));
+        }
+    }
+
     async function updateProfileData() {
         const newName = document.getElementById('editName').value.trim();
         const newPass = document.getElementById('editPass').value.trim();
@@ -278,9 +353,7 @@
 
         try {
             const updateData = { name: newName, pass: newPass };
-            if (tempPicBase64) {
-                updateData.pic = tempPicBase64;
-            }
+            if (tempPicBase64) updateData.pic = tempPicBase64;
 
             await db.collection('users').doc(currentUser.id).update(updateData);
             currentUser.name = newName;
@@ -294,19 +367,6 @@
         } catch (e) {
             alert('Error: ' + e.message);
         }
-    }
-
-    function applyCustomBg() {
-        const val = document.getElementById('bgInput').value.trim();
-        if (!val) return;
-        localStorage.setItem('anas_chat_bg', val);
-        if (val.startsWith('http')) {
-            document.body.style.background = `url('${val}') no-repeat center center fixed`;
-            document.body.style.backgroundSize = 'cover';
-        } else {
-            document.body.style.background = val;
-        }
-        closeBgModal();
     }
 
     function toggleSidebar(show) {
