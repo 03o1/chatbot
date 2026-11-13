@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Anas Chat - Admin Control Panel</title>
+    <title>Anas Social - Admin Control Panel</title>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
     <style>
@@ -12,21 +12,14 @@
 
         #adminAuth { position: fixed; inset: 0; background: #020617; display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
         .login-card { background: #111827; border: 1px solid #1f2937; padding: 30px; border-radius: 14px; width: 100%; max-width: 380px; text-align: center; }
-        .login-card h2 { color: #38bdf8; margin-bottom: 6px; }
-        .login-card p { color: #9ca3af; font-size: 13px; margin-bottom: 20px; }
         .input-box { width: 100%; background: #030712; border: 1px solid #374151; color: white; padding: 11px; border-radius: 8px; margin-bottom: 12px; outline: none; }
         .btn-main { width: 100%; background: #0284c7; color: white; border: none; padding: 11px; border-radius: 8px; font-weight: bold; cursor: pointer; }
-        .err { color: #f87171; font-size: 12px; margin-top: 8px; }
 
-        header { background: #111827; padding: 14px 24px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1f2937; flex-wrap: wrap; gap: 10px; }
-        .logo { font-size: 18px; font-weight: 800; color: #38bdf8; display: flex; align-items: center; gap: 8px; }
-        .admin-badge { background: #ef4444; color: white; font-size: 10px; padding: 3px 8px; border-radius: 4px; font-weight: bold; }
-        .header-actions { display: flex; gap: 8px; align-items: center; }
-
+        header { background: #111827; padding: 14px 24px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1f2937; }
         .container { max-width: 1000px; margin: 20px auto; padding: 0 16px; width: 100%; flex: 1; }
         .section-title { font-size: 18px; font-weight: bold; margin-bottom: 12px; color: #e2e8f0; margin-top: 24px; }
         
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 24px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 24px; }
         .stat-card { background: #111827; border: 1px solid #1f2937; padding: 18px; border-radius: 10px; text-align: center; }
         .stat-val { font-size: 24px; font-weight: bold; color: #38bdf8; margin-top: 4px; }
 
@@ -35,124 +28,45 @@
         th, td { padding: 12px 16px; border-bottom: 1px solid #1f2937; }
         th { background: #1f2937; color: #cbd5e1; }
         .del-btn { background: #ef4444; color: white; border: none; padding: 5px 10px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 11px; }
-        .edit-btn { background: #0284c7; color: white; border: none; padding: 5px 10px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 11px; }
-        .toggle-btn { padding: 5px 10px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; font-size: 11px; }
-
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 2000; align-items: center; justify-content: center; padding: 20px; }
-        .modal-content { background: #111827; border: 1px solid #1f2937; padding: 24px; border-radius: 12px; width: 100%; max-width: 360px; text-align: center; }
-        .modal-content h3 { color: #38bdf8; margin-bottom: 12px; font-size: 18px; }
-        .modal-content input { width: 100%; padding: 10px; background: #030712; border: 1px solid #374151; color: white; border-radius: 6px; margin-bottom: 12px; font-size: 13px; }
     </style>
 </head>
 <body>
 
 <div id="adminAuth">
     <div class="login-card">
-        <h2>ADMIN PORTAL</h2>
-        <p>Anas Chat Secure Management</p>
-        <input type="text" id="adminId" class="input-box" placeholder="Admin ID (Default: anas_admin_99)">
-        <input type="password" id="adminPass" class="input-box" placeholder="Password (Default: anas1234)">
-        <button class="btn-main" onclick="adminLogin()">Login to Dashboard</button>
-        <div class="err" id="loginErr"></div>
+        <h2 style="color:#38bdf8; margin-bottom:10px;">ADMIN PORTAL</h2>
+        <input type="text" id="adminId" class="input-box" placeholder="Admin ID (anas_admin_99)">
+        <input type="password" id="adminPass" class="input-box" placeholder="Password (anas1234)">
+        <button class="btn-main" onclick="adminLogin()">Login</button>
+        <div id="loginErr" style="color:#f87171; font-size:12px; margin-top:8px;"></div>
     </div>
 </div>
 
 <header>
-    <div class="logo">
-        <span id="headerAdminName">ANAS ADMIN</span> 
-        <span class="admin-badge" id="headerAdminId">@anas_admin_99</span>
-    </div>
-    <div class="header-actions">
-        <button class="edit-btn" onclick="openAdminModal()">⚙️ Edit Profile</button>
-        <button class="del-btn" onclick="adminLogout()">Logout</button>
-    </div>
+    <div style="font-weight:bold; color:#38bdf8;">ANAS SOCIAL ADMIN</div>
+    <button class="del-btn" onclick="localStorage.removeItem('anas_admin_logged'); location.reload();">Logout</button>
 </header>
 
 <div class="container">
     <div class="stats-grid">
-        <div class="stat-card">
-            <div>Total Users</div>
-            <div class="stat-val" id="totalUsersCount">0</div>
-        </div>
-        <div class="stat-card">
-            <div>Used Themes (Files)</div>
-            <div class="stat-val" id="totalThemesCount">0</div>
-        </div>
-        <div class="stat-card">
-            <div>Used Links</div>
-            <div class="stat-val" id="totalLinksCount">0</div>
-        </div>
+        <div class="stat-card"><div>Total Users</div><div class="stat-val" id="totalUsers">0</div></div>
+        <div class="stat-card"><div>Total Posts</div><div class="stat-val" id="totalPosts">0</div></div>
     </div>
 
-    <!-- Users Table -->
     <div class="section-title">All Registered Users</div>
     <div class="table-wrap">
         <table>
-            <thead>
-                <tr>
-                    <th>Avatar</th>
-                    <th>Name</th>
-                    <th>Username ID</th>
-                    <th>Password</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody id="usersTableBody">
-                <tr><td colspan="6" style="text-align:center; color:#9ca3af;">Loading users...</td></tr>
-            </tbody>
+            <thead><tr><th>Name</th><th>ID</th><th>Status</th><th>Action</th></tr></thead>
+            <tbody id="usersTable"></tbody>
         </table>
     </div>
 
-    <!-- Used Themes (File Uploads) Category -->
-    <div class="section-title">Used Themes (Uploaded Images)</div>
+    <div class="section-title">All Community Posts & Controls</div>
     <div class="table-wrap">
         <table>
-            <thead>
-                <tr>
-                    <th>Preview</th>
-                    <th>User</th>
-                    <th>Type</th>
-                    <th>Visibility to Others</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody id="themesTableBody">
-                <tr><td colspan="5" style="text-align:center; color:#9ca3af;">No themes recorded yet.</td></tr>
-            </tbody>
+            <thead><tr><th>Author</th><th>Content</th><th>Likes</th><th>Action</th></tr></thead>
+            <tbody id="postsTable"></tbody>
         </table>
-    </div>
-
-    <!-- Used Links Category -->
-    <div class="section-title">Used Links (URL Backgrounds)</div>
-    <div class="table-wrap">
-        <table>
-            <thead>
-                <tr>
-                    <th>Preview / URL</th>
-                    <th>User</th>
-                    <th>Visibility to Others</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody id="linksTableBody">
-                <tr><td colspan="4" style="text-align:center; color:#9ca3af;">No links recorded yet.</td></tr>
-            </tbody>
-        </table>
-    </div>
-</div>
-
-<!-- Admin Profile Edit Modal -->
-<div class="modal" id="adminModal">
-    <div class="modal-content">
-        <h3>Edit Admin Profile</h3>
-        <input type="text" id="editAdminName" placeholder="Admin Display Name" class="input-box">
-        <input type="text" id="editAdminUsername" placeholder="New Admin Username ID" class="input-box">
-        <input type="password" id="editAdminPass" placeholder="New Password" class="input-box">
-        <div style="display: flex; gap: 8px;">
-            <button class="btn-main" onclick="saveAdminProfile()" style="background:#10b981; color:#020617;">Save</button>
-            <button class="btn-main" onclick="closeAdminModal()" style="background:#ef4444;">Cancel</button>
-        </div>
     </div>
 </div>
 
@@ -166,183 +80,49 @@
       appId: "1:51927735471:web:5d95993d3979730c9d485a",
       measurementId: "G-VTFCGDT9KB"
     };
-
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    let isAdminLoggedIn = localStorage.getItem('anas_admin_logged') === 'true';
-
-    window.onload = () => {
-        updateAdminHeaderUI();
-        if (isAdminLoggedIn) {
-            document.getElementById('adminAuth').style.display = 'none';
-            fetchAdminData();
-        }
-    };
-
-    function getAdminCredentials() {
-        return {
-            id: localStorage.getItem('anas_admin_id') || 'anas_admin_99',
-            pass: localStorage.getItem('anas_admin_pass') || 'anas1234',
-            name: localStorage.getItem('anas_admin_name') || 'ANAS ADMIN'
-        };
+    if(localStorage.getItem('anas_admin_logged') === 'true') {
+        document.getElementById('adminAuth').style.display = 'none';
+        loadAdminData();
     }
 
-    function updateAdminHeaderUI() {
-        const admin = getAdminCredentials();
-        document.getElementById('headerAdminName').innerText = admin.name;
-        document.getElementById('headerAdminId').innerText = '@' + admin.id;
-    }
-
-    async function adminLogin() {
-        const inputId = document.getElementById('adminId').value.trim().toLowerCase();
-        const inputPass = document.getElementById('adminPass').value.trim();
-        const err = document.getElementById('loginErr');
-        const admin = getAdminCredentials();
-
-        if (inputId === admin.id.toLowerCase() && inputPass === admin.pass) {
+    function adminLogin() {
+        const id = document.getElementById('adminId').value.trim();
+        const pass = document.getElementById('adminPass').value.trim();
+        if(id === 'anas_admin_99' && pass === 'anas1234') {
             localStorage.setItem('anas_admin_logged', 'true');
             document.getElementById('adminAuth').style.display = 'none';
-            fetchAdminData();
+            loadAdminData();
         } else {
-            err.innerText = 'Galat Admin ID ya Password!';
+            document.getElementById('loginErr').innerText = 'Invalid credentials!';
         }
     }
 
-    function adminLogout() {
-        localStorage.removeItem('anas_admin_logged');
-        location.reload();
-    }
-
-    function openAdminModal() {
-        const admin = getAdminCredentials();
-        document.getElementById('editAdminName').value = admin.name;
-        document.getElementById('editAdminUsername').value = admin.id;
-        document.getElementById('editAdminPass').value = admin.pass;
-        document.getElementById('adminModal').style.display = 'flex';
-    }
-
-    function closeAdminModal() { document.getElementById('adminModal').style.display = 'none'; }
-
-    function saveAdminProfile() {
-        const newName = document.getElementById('editAdminName').value.trim();
-        const newId = document.getElementById('editAdminUsername').value.trim().toLowerCase();
-        const newPass = document.getElementById('editAdminPass').value.trim();
-
-        if (!newName || !newId || !newPass) { alert('Tamam fields lazmi hain!'); return; }
-
-        localStorage.setItem('anas_admin_name', newName);
-        localStorage.setItem('anas_admin_id', newId);
-        localStorage.setItem('anas_admin_pass', newPass);
-
-        alert('Admin profile update ho gayi!');
-        closeAdminModal();
-        updateAdminHeaderUI();
-    }
-
-    function fetchAdminData() {
-        // Fetch Users
-        db.collection('users').onSnapshot(snapshot => {
-            const tbody = document.getElementById('usersTableBody');
-            tbody.innerHTML = '';
+    function loadAdminData() {
+        db.collection('users').onSnapshot(snap => {
+            const tb = document.getElementById('usersTable');
+            tb.innerHTML = '';
             let count = 0;
-            const currentAdmin = getAdminCredentials();
-
-            snapshot.forEach(doc => {
-                const u = doc.data();
-                if (doc.id === currentAdmin.id || doc.id === 'anas_admin_99') return; 
+            snap.forEach(d => {
+                if(d.id === 'anas_admin_99') return;
                 count++;
-
-                const avatarHTML = u.pic ? `<img src="${u.pic}" style="width:32px; height:32px; border-radius:50%; object-fit:cover;">` : `<div style="width:32px; height:32px; border-radius:50%; background:#0284c7; display:flex; align-items:center; justify-content:center; font-weight:bold; color:white;">${u.name ? u.name.charAt(0).toUpperCase() : 'U'}</div>`;
-
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${avatarHTML}</td>
-                    <td>${u.name || 'N/A'}</td>
-                    <td>@${u.id}</td>
-                    <td><code style="background:#030712; padding:3px 6px; border-radius:4px; color:#38bdf8;">${u.pass || 'N/A'}</code></td>
-                    <td><span style="color:${u.status === 'online' ? '#10b981' : '#9ca3af'}">${u.status || 'offline'}</span></td>
-                    <td><button class="del-btn" onclick="deleteUser('${u.id}')">Delete</button></td>
-                `;
-                tbody.appendChild(tr);
+                const u = d.data();
+                tb.innerHTML += `<tr><td>${u.name}</td><td>@${u.id}</td><td>${u.status}</td><td><button class="del-btn" onclick="db.collection('users').doc('${d.id}').delete()">Delete</button></td></tr>`;
             });
-            document.getElementById('totalUsersCount').innerText = count;
+            document.getElementById('totalUsers').innerText = count;
         });
 
-        // Fetch Used Themes & Links from Firestore
-        db.collection('used_themes').orderBy('timestamp', 'desc').onSnapshot(snapshot => {
-            const themesBody = document.getElementById('themesTableBody');
-            const linksBody = document.getElementById('linksTableBody');
-            themesBody.innerHTML = '';
-            linksBody.innerHTML = '';
-
-            let themeCount = 0;
-            let linkCount = 0;
-
-            snapshot.forEach(doc => {
-                const data = doc.data();
-                const docId = doc.id;
-                const isVisible = data.visibleToPublic !== false;
-
-                if (data.type === 'file') {
-                    themeCount++;
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td><img src="${data.value}" style="width:40px; height:40px; border-radius:6px; object-fit:cover;"></td>
-                        <td>${data.userName} (@${data.userId})</td>
-                        <td>Uploaded File</td>
-                        <td><button class="toggle-btn" style="background:${isVisible ? '#10b981' : '#64748b'}; color:white;" onclick="toggleThemeVisibility('${docId}', ${!isVisible})">${isVisible ? 'Visible' : 'Hidden'}</button></td>
-                        <td><button class="del-btn" onclick="deleteTheme('${docId}')">Delete</button></td>
-                    `;
-                    themesBody.appendChild(tr);
-                } else {
-                    linkCount++;
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td><a href="${data.value}" target="_blank" style="color:#38bdf8; font-size:12px; word-break:break-all;">View Link</a></td>
-                        <td>${data.userName} (@${data.userId})</td>
-                        <td><button class="toggle-btn" style="background:${isVisible ? '#10b981' : '#64748b'}; color:white;" onclick="toggleThemeVisibility('${docId}', ${!isVisible})">${isVisible ? 'Visible' : 'Hidden'}</button></td>
-                        <td><button class="del-btn" onclick="deleteTheme('${docId}')">Delete</button></td>
-                    `;
-                    linksBody.appendChild(tr);
-                }
+        db.collection('posts').orderBy('timestamp', 'desc').onSnapshot(snap => {
+            const tb = document.getElementById('postsTable');
+            tb.innerHTML = '';
+            document.getElementById('totalPosts').innerText = snap.size;
+            snap.forEach(d => {
+                const p = d.data();
+                tb.innerHTML += `<tr><td>${p.userName}</td><td>${p.text || '[Image Post]'}</td><td>${p.likes ? p.likes.length : 0}</td><td><button class="del-btn" onclick="db.collection('posts').doc('${d.id}').delete()">Delete Post</button></td></tr>`;
             });
-
-            document.getElementById('totalThemesCount').innerText = themeCount;
-            document.getElementById('totalLinksCount').innerText = linkCount;
-
-            if (themeCount === 0) themesBody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#9ca3af;">No themes recorded.</td></tr>`;
-            if (linkCount === 0) linksBody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#9ca3af;">No links recorded.</td></tr>`;
         });
-    }
-
-    async function toggleThemeVisibility(docId, newStatus) {
-        try {
-            await db.collection('used_themes').doc(docId).update({ visibleToPublic: newStatus });
-        } catch (e) {
-            alert('Error: ' + e.message);
-        }
-    }
-
-    async function deleteTheme(docId) {
-        if (confirm('Kya aap is theme/link record ko delete karna chahte hain?')) {
-            try {
-                await db.collection('used_themes').doc(docId).delete();
-            } catch (e) {
-                alert('Error: ' + e.message);
-            }
-        }
-    }
-
-    async function deleteUser(userId) {
-        if (confirm(`Kya aap waqai user @${userId} ko delete karna chahte hain?`)) {
-            try {
-                await db.collection('users').doc(userId).delete();
-                alert('User delete ho gaya!');
-            } catch (e) {
-                alert('Error: ' + e.message);
-            }
-        }
     }
 </script>
 </body>
