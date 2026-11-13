@@ -51,7 +51,8 @@
         .user-card.active-chat { background: #0c4a6e; border-color: #38bdf8; }
 
         .user-left { display: flex; align-items: center; gap: 10px; }
-        .avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--accent); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; }
+        .avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--accent); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; overflow: hidden; object-fit: cover; }
+        .avatar img { width: 100%; height: 100%; object-fit: cover; }
         .u-name { font-size: 13px; font-weight: 600; color: var(--text); }
         .u-id { font-size: 11px; color: var(--text-dim); }
         
@@ -59,7 +60,7 @@
 
         .chat-window { flex: 1; display: flex; flex-direction: column; background: rgba(6, 9, 19, 0.85); backdrop-filter: blur(5px); }
         .chat-header { padding: 10px 16px; background: var(--panel-bg); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; min-height: 56px; }
-        .active-user-title { font-size: 15px; font-weight: bold; color: var(--text); }
+        .active-user-title { font-size: 15px; font-weight: bold; color: var(--text); display: flex; align-items: center; gap: 10px; }
         .back-to-users { display: none; background: #334155; color: white; border: none; padding: 5px 10px; border-radius: 6px; font-size: 12px; cursor: pointer; }
 
         .messages-container { flex: 1; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
@@ -74,7 +75,6 @@
         .msg-input { flex: 1; background: var(--card-bg); border: 1px solid var(--border); color: white; padding: 10px 14px; border-radius: 8px; outline: none; font-size: 13px; }
         .send-btn { background: var(--accent); color: white; border: none; padding: 0 16px; height: 40px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 13px; }
 
-        /* Modals */
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 2000; align-items: center; justify-content: center; padding: 20px; }
         .modal-content { background: var(--card-bg); border: 1px solid var(--border); padding: 24px; border-radius: 12px; width: 100%; max-width: 360px; text-align: center; }
         .modal-content h3 { color: #38bdf8; margin-bottom: 12px; font-size: 18px; }
@@ -97,7 +97,7 @@
 <div id="authOverlay">
     <div class="auth-box">
         <h1>ANAS CHAT</h1>
-        <p>Offline Supported Cloud Portal</p>
+        <p>Pro Cloud Portal</p>
         
         <div class="auth-tabs">
             <button class="auth-tab active" id="btnTabSignIn" onclick="switchAuthMode('signin')">Sign In</button>
@@ -152,7 +152,10 @@
         <div class="chat-header">
             <div style="display: flex; align-items: center; gap: 10px;">
                 <button class="back-to-users" onclick="toggleSidebar(true)">← Users</button>
-                <div class="active-user-title" id="chatTitle">Select a User to Chat</div>
+                <div class="active-user-title" id="chatTitle">
+                    <div class="avatar" id="headerAvatar" style="display:none; width:30px; height:30px;"></div>
+                    <span id="chatTitleText">Select a User to Chat</span>
+                </div>
             </div>
         </div>
         <div class="messages-container" id="messagesContainer">
@@ -186,12 +189,16 @@
     <div class="modal-content">
         <h3>Edit Profile</h3>
         <div class="form-group">
-            <label>New Name</label>
+            <label>Display Name</label>
             <input type="text" id="editName" class="auth-input">
         </div>
         <div class="form-group">
-            <label>New Password</label>
-            <input type="password" id="editPass" class="auth-input" placeholder="New password">
+            <label>Profile Image URL</label>
+            <input type="text" id="editPic" class="auth-input" placeholder="https://example.com/pic.jpg">
+        </div>
+        <div class="form-group">
+            <label>Password</label>
+            <input type="password" id="editPass" class="auth-input">
         </div>
         <div class="modal-btns" style="margin-top: 10px;">
             <button class="btn-save" onclick="updateProfileData()">Save</button>
@@ -214,12 +221,7 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // Enable Offline Persistence so app works seamlessly even if offline
-    db.enablePersistence({ synchronizeTabs: true }).catch(err => {
-        if (err.code == 'unimplemented') {
-            console.warn('Browser does not support offline persistence');
-        }
-    });
+    db.enablePersistence({ synchronizeTabs: true }).catch(err => {});
 
     let currentUser = JSON.parse(localStorage.getItem('anas_chat_user')) || null;
     let authMode = 'signin';
@@ -249,25 +251,28 @@
     function openBgModal() { document.getElementById('bgModal').style.display = 'flex'; }
     function closeBgModal() { document.getElementById('bgModal').style.display = 'none'; }
     function openProfileModal() {
-        document.getElementById('editName').value = currentUser.name;
-        document.getElementById('editPass').value = currentUser.pass;
+        document.getElementById('editName').value = currentUser.name || '';
+        document.getElementById('editPic').value = currentUser.pic || '';
+        document.getElementById('editPass').value = currentUser.pass || '';
         document.getElementById('profileModal').style.display = 'flex';
     }
     function closeProfileModal() { document.getElementById('profileModal').style.display = 'none'; }
 
     async function updateProfileData() {
         const newName = document.getElementById('editName').value.trim();
+        const newPic = document.getElementById('editPic').value.trim();
         const newPass = document.getElementById('editPass').value.trim();
-        if (!newName || !newPass) { alert('Fields empty nahi ho sakti!'); return; }
+        if (!newName || !newPass) { alert('Name aur Password lazmi hain!'); return; }
 
         try {
-            await db.collection('users').doc(currentUser.id).update({ name: newName, pass: newPass });
+            await db.collection('users').doc(currentUser.id).update({ name: newName, pic: newPic, pass: newPass });
             currentUser.name = newName;
+            currentUser.pic = newPic;
             currentUser.pass = newPass;
             localStorage.setItem('anas_chat_user', JSON.stringify(currentUser));
-            document.getElementById('pillInfo').innerText = `@${currentUser.id}`;
             alert('Profile update ho gayi!');
             closeProfileModal();
+            loadUsersFromCloud();
         } catch (e) {
             alert('Error: ' + e.message);
         }
@@ -321,7 +326,7 @@
                     errEl.innerText = 'Yeh username pehle se mojood hai!';
                     return;
                 }
-                const newUser = { id, name, pass, status: 'online' };
+                const newUser = { id, name, pass, pic: '', status: 'online' };
                 await userRef.set(newUser);
                 currentUser = newUser;
             } else {
@@ -345,13 +350,7 @@
             loadUsersFromCloud();
             listenToAllUnreadMessages();
         } catch (e) {
-            // Fallback for offline cached signin if offline
-            if (currentUser && authMode === 'signin') {
-                document.getElementById('authOverlay').style.display = 'none';
-                loadUsersFromCloud();
-            } else {
-                errEl.innerText = 'Offline Error / Check details: ' + e.message;
-            }
+            errEl.innerText = 'Error: ' + e.message;
         }
     }
 
@@ -365,7 +364,7 @@
     }
 
     async function loadUsersFromCloud() {
-        db.collection('users').onSnapshot({ includeMetadataChanges: true }, snapshot => {
+        db.collection('users').onSnapshot(snapshot => {
             allUsers = [];
             snapshot.forEach(doc => {
                 if (doc.id !== currentUser.id && doc.id !== 'anas_admin_99') {
@@ -377,9 +376,7 @@
     }
 
     function listenToAllUnreadMessages() {
-        // Track incoming unread counts dynamically
         db.collection('chats').onSnapshot(snapshot => {
-            // Listening to chats where current user is involved
             db.collection('users').get().then(snap => {
                 snap.forEach(doc => {
                     const peerId = doc.id;
@@ -419,10 +416,11 @@
             
             const count = unreadCounts[u.id] || 0;
             const badgeHTML = count > 0 ? `<div class="unread-badge">${count}</div>` : '';
+            const avatarHTML = u.pic ? `<img src="${u.pic}" alt="avatar">` : u.name.charAt(0).toUpperCase();
 
             card.innerHTML = `
                 <div class="user-left">
-                    <div class="avatar">${u.name.charAt(0).toUpperCase()}</div>
+                    <div class="avatar">${avatarHTML}</div>
                     <div>
                         <div class="u-name">${u.name}</div>
                         <div class="u-id">@${u.id} • <span style="color:${u.status === 'online' ? '#10b981' : '#64748b'}">${u.status}</span></div>
@@ -436,17 +434,18 @@
 
     function selectChatUser(user) {
         selectedUser = user;
-        document.getElementById('chatTitle').innerText = `${user.name} (@${user.id})`;
+        const headerAvatarEl = document.getElementById('headerAvatar');
+        headerAvatarEl.style.display = 'flex';
+        headerAvatarEl.innerHTML = user.pic ? `<img src="${user.pic}">` : user.name.charAt(0).toUpperCase();
+        document.getElementById('chatTitleText').innerText = `${user.name} (@${user.id})`;
+        
         document.getElementById('msgInput').disabled = false;
         document.getElementById('sendBtn').disabled = false;
         
-        // Mark messages as read when opening chat
         const chatId = [currentUser.id, user.id].sort().join('_');
         db.collection('chats').doc(chatId).collection('messages')
           .where('receiver', '==', currentUser.id).get().then(snap => {
-              snap.forEach(d => {
-                  d.ref.update({ read: true });
-              });
+              snap.forEach(d => { d.ref.update({ read: true }); });
           });
         unreadCounts[user.id] = 0;
         
