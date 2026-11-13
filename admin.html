@@ -19,12 +19,12 @@
         .err { color: #f87171; font-size: 12px; margin-top: 8px; }
 
         header { background: #111827; padding: 14px 24px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1f2937; flex-wrap: wrap; gap: 10px; }
-        .logo { font-size: 18px; font-weight: 800; color: #38bdf8; }
+        .logo { font-size: 18px; font-weight: 800; color: #38bdf8; display: flex; align-items: center; gap: 8px; }
         .admin-badge { background: #ef4444; color: white; font-size: 10px; padding: 3px 8px; border-radius: 4px; font-weight: bold; }
         .header-actions { display: flex; gap: 8px; align-items: center; }
 
         .container { max-width: 1000px; margin: 20px auto; padding: 0 16px; width: 100%; flex: 1; }
-        .section-title { font-size: 18px; font-weight: bold; margin-bottom: 12px; color: #e2e8f0; }
+        .section-title { font-size: 18px; font-weight: bold; margin-bottom: 12px; color: #e2e8f0; display: flex; justify-content: space-between; align-items: center; }
         
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 24px; }
         .stat-card { background: #111827; border: 1px solid #1f2937; padding: 18px; border-radius: 10px; text-align: center; }
@@ -48,18 +48,21 @@
 <div id="adminAuth">
     <div class="login-card">
         <h2>ADMIN PORTAL</h2>
-        <p>Anas Chat Secure Management</p>
-        <input type="text" id="adminId" class="input-box" placeholder="Admin ID (anas_admin_99)">
-        <input type="password" id="adminPass" class="input-box" placeholder="Password">
+        <p id="loginSubText">Anas Chat Secure Management</p>
+        <input type="text" id="adminId" class="input-box" placeholder="Admin ID (Default: anas_admin_99)">
+        <input type="password" id="adminPass" class="input-box" placeholder="Password (Default: anas1234)">
         <button class="btn-main" onclick="adminLogin()">Login to Dashboard</button>
         <div class="err" id="loginErr"></div>
     </div>
 </div>
 
 <header>
-    <div class="logo">ANAS CHAT <span class="admin-badge">ADMIN CONTROL</span></div>
+    <div class="logo">
+        <span id="headerAdminName">ANAS ADMIN</span> 
+        <span class="admin-badge" id="headerAdminId">@anas_admin_99</span>
+    </div>
     <div class="header-actions">
-        <button class="edit-btn" onclick="openAdminModal()">⚙️ Edit Admin Profile</button>
+        <button class="edit-btn" onclick="openAdminModal()">⚙️ Edit Profile</button>
         <button class="del-btn" onclick="adminLogout()">Logout</button>
     </div>
 </header>
@@ -95,10 +98,12 @@
 <!-- Admin Profile Edit Modal -->
 <div class="modal" id="adminModal">
     <div class="modal-content">
-        <h3>Edit Admin Password</h3>
-        <input type="password" id="newAdminPass" placeholder="New Admin Password" class="input-box">
+        <h3>Edit Admin Profile</h3>
+        <input type="text" id="editAdminName" placeholder="Admin Display Name" class="input-box">
+        <input type="text" id="editAdminUsername" placeholder="New Admin Username ID" class="input-box">
+        <input type="password" id="editAdminPass" placeholder="New Password" class="input-box">
         <div style="display: flex; gap: 8px;">
-            <button class="btn-main" onclick="saveAdminPass()" style="background:#10b981; color:#020617;">Save</button>
+            <button class="btn-main" onclick="saveAdminProfile()" style="background:#10b981; color:#020617;">Save</button>
             <button class="btn-main" onclick="closeAdminModal()" style="background:#ef4444;">Cancel</button>
         </div>
     </div>
@@ -121,21 +126,35 @@
     let isAdminLoggedIn = localStorage.getItem('anas_admin_logged') === 'true';
 
     window.onload = () => {
+        updateAdminHeaderUI();
         if (isAdminLoggedIn) {
             document.getElementById('adminAuth').style.display = 'none';
             fetchAdminData();
         }
     };
 
+    function getAdminCredentials() {
+        return {
+            id: localStorage.getItem('anas_admin_id') || 'anas_admin_99',
+            pass: localStorage.getItem('anas_admin_pass') || 'anas1234',
+            name: localStorage.getItem('anas_admin_name') || 'ANAS ADMIN'
+        };
+    }
+
+    function updateAdminHeaderUI() {
+        const admin = getAdminCredentials();
+        document.getElementById('headerAdminName').innerText = admin.name;
+        document.getElementById('headerAdminId').innerText = '@' + admin.id;
+    }
+
     async function adminLogin() {
-        const id = document.getElementById('adminId').value.trim();
-        const pass = document.getElementById('adminPass').value.trim();
+        const inputId = document.getElementById('adminId').value.trim().toLowerCase();
+        const inputPass = document.getElementById('adminPass').value.trim();
         const err = document.getElementById('loginErr');
 
-        // Check stored admin pass or default
-        const savedAdminPass = localStorage.getItem('anas_admin_pass') || 'anas1234';
+        const admin = getAdminCredentials();
 
-        if (id === 'anas_admin_99' && pass === savedAdminPass) {
+        if (inputId === admin.id.toLowerCase() && inputPass === admin.pass) {
             localStorage.setItem('anas_admin_logged', 'true');
             document.getElementById('adminAuth').style.display = 'none';
             fetchAdminData();
@@ -149,15 +168,33 @@
         location.reload();
     }
 
-    function openAdminModal() { document.getElementById('adminModal').style.display = 'flex'; }
+    function openAdminModal() {
+        const admin = getAdminCredentials();
+        document.getElementById('editAdminName').value = admin.name;
+        document.getElementById('editAdminUsername').value = admin.id;
+        document.getElementById('editAdminPass').value = admin.pass;
+        document.getElementById('adminModal').style.display = 'flex';
+    }
+
     function closeAdminModal() { document.getElementById('adminModal').style.display = 'none'; }
 
-    function saveAdminPass() {
-        const p = document.getElementById('newAdminPass').value.trim();
-        if (!p) { alert('Password empty nahi ho sakta!'); return; }
-        localStorage.setItem('anas_admin_pass', p);
-        alert('Admin password update ho gaya!');
+    function saveAdminProfile() {
+        const newName = document.getElementById('editAdminName').value.trim();
+        const newId = document.getElementById('editAdminUsername').value.trim().toLowerCase();
+        const newPass = document.getElementById('editAdminPass').value.trim();
+
+        if (!newName || !newId || !newPass) {
+            alert('Tamam fields pur karna lazmi hain!');
+            return;
+        }
+
+        localStorage.setItem('anas_admin_name', newName);
+        localStorage.setItem('anas_admin_id', newId);
+        localStorage.setItem('anas_admin_pass', newPass);
+
+        alert('Admin profile update ho gayi!');
         closeAdminModal();
+        updateAdminHeaderUI();
     }
 
     function fetchAdminData() {
@@ -166,9 +203,12 @@
             tbody.innerHTML = '';
             let count = 0;
 
+            const currentAdmin = getAdminCredentials();
+
             snapshot.forEach(doc => {
                 const u = doc.data();
-                if (doc.id === 'anas_admin_99') return; 
+                // Skip admin if stored in users collection
+                if (doc.id === currentAdmin.id || doc.id === 'anas_admin_99') return; 
                 count++;
 
                 const avatarHTML = u.pic ? `<img src="${u.pic}" style="width:32px; height:32px; border-radius:50%; object-fit:cover;">` : `<div style="width:32px; height:32px; border-radius:50%; background:#0284c7; display:flex; align-items:center; justify-content:center; font-weight:bold; color:white;">${u.name ? u.name.charAt(0).toUpperCase() : 'U'}</div>`;
