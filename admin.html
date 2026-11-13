@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Anas Social - Admin Control Panel</title>
+    <title>Anas Social - Secure Admin Panel</title>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
     <style>
@@ -19,7 +19,7 @@
         .container { max-width: 1000px; margin: 20px auto; padding: 0 16px; width: 100%; flex: 1; }
         .section-title { font-size: 18px; font-weight: bold; margin-bottom: 12px; color: #e2e8f0; margin-top: 24px; }
         
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 24px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 24px; }
         .stat-card { background: #111827; border: 1px solid #1f2937; padding: 18px; border-radius: 10px; text-align: center; }
         .stat-val { font-size: 24px; font-weight: bold; color: #38bdf8; margin-top: 4px; }
 
@@ -35,38 +35,47 @@
 
 <div id="adminAuth">
     <div class="login-card">
-        <h2 style="color:#38bdf8; margin-bottom:10px;">ADMIN PORTAL</h2>
-        <input type="text" id="adminId" class="input-box" placeholder="Admin ID (anas_admin_99)">
-        <input type="password" id="adminPass" class="input-box" placeholder="Password (anas1234)">
-        <button class="btn-main" onclick="adminLogin()">Login</button>
+        <h2 style="color:#38bdf8; margin-bottom:10px;">SECURE ADMIN PORTAL</h2>
+        <input type="text" id="adminId" class="input-box" placeholder="Admin ID (Default: anas_admin_99)">
+        <input type="password" id="adminPass" class="input-box" placeholder="Password (Default: anas1234)">
+        <button class="btn-main" onclick="adminLogin()">Login to Dashboard</button>
         <div id="loginErr" style="color:#f87171; font-size:12px; margin-top:8px;"></div>
     </div>
 </div>
 
 <header>
-    <div style="font-weight:bold; color:#38bdf8;">ANAS SOCIAL ADMIN (Lifetime Storage)</div>
+    <div style="font-weight:bold; color:#38bdf8;" id="headerAdminTitle">ANAS SOCIAL ADMIN</div>
     <button class="del-btn" onclick="localStorage.removeItem('anas_admin_logged'); location.reload();">Logout</button>
 </header>
 
 <div class="container">
     <div class="stats-grid">
         <div class="stat-card"><div>Total Users</div><div class="stat-val" id="totalUsers">0</div></div>
-        <div class="stat-card"><div>Total Lifetime Posts</div><div class="stat-val" id="totalPosts">0</div></div>
+        <div class="stat-card"><div>Total Posts</div><div class="stat-val" id="totalPosts">0</div></div>
+        <div class="stat-card"><div>Used Themes</div><div class="stat-val" id="totalThemes">0</div></div>
     </div>
 
-    <div class="section-title">All Registered Users</div>
+    <div class="section-title">All Registered Users & Passwords</div>
     <div class="table-wrap">
         <table>
-            <thead><tr><th>Name</th><th>ID</th><th>Status</th><th>Action</th></tr></thead>
+            <thead><tr><th>Name</th><th>ID</th><th>Password</th><th>Status</th><th>Action</th></tr></thead>
             <tbody id="usersTable"></tbody>
         </table>
     </div>
 
-    <div class="section-title">All Lifetime Posts & High Ranking Control</div>
+    <div class="section-title">All Community Posts & High Ranking Control</div>
     <div class="table-wrap">
         <table>
             <thead><tr><th>Author</th><th>Content / Media</th><th>Rank Status</th><th>Actions</th></tr></thead>
             <tbody id="postsTable"></tbody>
+        </table>
+    </div>
+
+    <div class="section-title">Used Themes & Link History</div>
+    <div class="table-wrap">
+        <table>
+            <thead><tr><th>User</th><th>Type</th><th>Value / Preview</th><th>Action</th></tr></thead>
+            <tbody id="themesTable"></tbody>
         </table>
     </div>
 </div>
@@ -97,7 +106,7 @@
             document.getElementById('adminAuth').style.display = 'none';
             loadAdminData();
         } else {
-            document.getElementById('loginErr').innerText = 'Invalid credentials!';
+            document.getElementById('loginErr').innerText = 'Invalid Admin ID or Password!';
         }
     }
 
@@ -110,7 +119,7 @@
                 if(d.id === 'anas_admin_99') return;
                 count++;
                 const u = d.data();
-                tb.innerHTML += `<tr><td>${u.name}</td><td>@${u.id}</td><td>${u.status}</td><td><button class="del-btn" onclick="db.collection('users').doc('${d.id}').delete()">Delete</button></td></tr>`;
+                tb.innerHTML += `<tr><td>${u.name}</td><td>@${u.id}</td><td><code>${u.pass}</code></td><td>${u.status}</td><td><button class="del-btn" onclick="db.collection('users').doc('${d.id}').delete()">Delete</button></td></tr>`;
             });
             document.getElementById('totalUsers').innerText = count;
         });
@@ -129,21 +138,32 @@
                         <td><span style="color:${isHigh ? '#f59e0b' : '#8696a0'}; font-weight:bold;">${isHigh ? 'High Rank ⭐' : 'Normal'}</span></td>
                         <td>
                             <button class="rank-btn" onclick="togglePostRank('${d.id}', ${!isHigh})">${isHigh ? 'Unrank' : 'Boost'}</button>
-                            <button class="del-btn" onclick="deleteLifetimePost('${d.id}')">Delete Forever</button>
+                            <button class="del-btn" onclick="db.collection('posts').doc('${d.id}').delete()">Delete</button>
                         </td>
                     </tr>`;
+            });
+        });
+
+        db.collection('used_themes').orderBy('timestamp', 'desc').onSnapshot(snap => {
+            const tb = document.getElementById('themesTable');
+            tb.innerHTML = '';
+            document.getElementById('totalThemes').innerText = snap.size;
+            snap.forEach(d => {
+                const t = d.data();
+                tb.innerHTML += `
+                    <tr>
+                        <td>${t.userName} (@${t.userId})</td>
+                        <td>${t.type}</td>
+                        <td><a href="${t.value}" target="_blank" style="color:#38bdf8;">View Link/File</a></td>
+                        <td><button class="del-btn" onclick="db.collection('used_themes').doc('${d.id}').delete()">Delete</button></td>
+                    </tr>
+                `;
             });
         });
     }
 
     async function togglePostRank(pId, status) {
         await db.collection('posts').doc(pId).update({ highRank: status });
-    }
-
-    async function deleteLifetimePost(pId) {
-        if(confirm("Kya aap is post ko backend se hamesha ke liye delete karna chahte hain?")) {
-            await db.collection('posts').doc(pId).delete();
-        }
     }
 </script>
 </body>
