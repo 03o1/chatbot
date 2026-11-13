@@ -44,14 +44,14 @@
 </div>
 
 <header>
-    <div style="font-weight:bold; color:#38bdf8;">ANAS SOCIAL ADMIN</div>
+    <div style="font-weight:bold; color:#38bdf8;">ANAS SOCIAL ADMIN (Lifetime Storage)</div>
     <button class="del-btn" onclick="localStorage.removeItem('anas_admin_logged'); location.reload();">Logout</button>
 </header>
 
 <div class="container">
     <div class="stats-grid">
         <div class="stat-card"><div>Total Users</div><div class="stat-val" id="totalUsers">0</div></div>
-        <div class="stat-card"><div>Total Posts</div><div class="stat-val" id="totalPosts">0</div></div>
+        <div class="stat-card"><div>Total Lifetime Posts</div><div class="stat-val" id="totalPosts">0</div></div>
     </div>
 
     <div class="section-title">All Registered Users</div>
@@ -62,10 +62,10 @@
         </table>
     </div>
 
-    <div class="section-title">All Community Posts & High Ranking Control</div>
+    <div class="section-title">All Lifetime Posts & High Ranking Control</div>
     <div class="table-wrap">
         <table>
-            <thead><tr><th>Author</th><th>Content</th><th>Rank Status</th><th>Actions</th></tr></thead>
+            <thead><tr><th>Author</th><th>Content / Media</th><th>Rank Status</th><th>Actions</th></tr></thead>
             <tbody id="postsTable"></tbody>
         </table>
     </div>
@@ -125,11 +125,11 @@
                 tb.innerHTML += `
                     <tr>
                         <td>${p.userName}</td>
-                        <td>${p.text || '[Image Post]'}</td>
+                        <td>${p.text || '[Media Post]'}</td>
                         <td><span style="color:${isHigh ? '#f59e0b' : '#8696a0'}; font-weight:bold;">${isHigh ? 'High Rank ⭐' : 'Normal'}</span></td>
                         <td>
-                            <button class="rank-btn" onclick="togglePostRank('${d.id}', ${!isHigh})">${isHigh ? 'Unrank' : 'Make High Rank'}</button>
-                            <button class="del-btn" onclick="db.collection('posts').doc('${d.id}').delete()">Delete</button>
+                            <button class="rank-btn" onclick="togglePostRank('${d.id}', ${!isHigh})">${isHigh ? 'Unrank' : 'Boost'}</button>
+                            <button class="del-btn" onclick="deleteLifetimePost('${d.id}')">Delete Forever</button>
                         </td>
                     </tr>`;
             });
@@ -138,6 +138,12 @@
 
     async function togglePostRank(pId, status) {
         await db.collection('posts').doc(pId).update({ highRank: status });
+    }
+
+    async function deleteLifetimePost(pId) {
+        if(confirm("Kya aap is post ko backend se hamesha ke liye delete karna chahte hain?")) {
+            await db.collection('posts').doc(pId).delete();
+        }
     }
 </script>
 </body>
