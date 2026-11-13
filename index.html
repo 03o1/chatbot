@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Anas Chat - WhatsApp & Social Pro</title>
+    <title>Anas Chat - WhatsApp & Status Pro</title>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
     <style>
@@ -36,14 +36,15 @@
         .auth-input { width: 100%; background: var(--panel-bg); border: 1px solid var(--border); color: white; padding: 11px 14px; border-radius: 8px; outline: none; font-size: 14px; }
         .auth-btn { width: 100%; background: var(--accent); color: white; border: none; padding: 12px; border-radius: 8px; font-size: 15px; font-weight: bold; cursor: pointer; }
 
-        header { background: var(--panel-bg); padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
+        header { background: var(--panel-bg); padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 10px; }
         .logo { font-size: 18px; font-weight: 800; color: var(--accent); display: flex; align-items: center; gap: 8px; }
-        .header-controls { display: flex; align-items: center; gap: 10px; }
+        .header-controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
         .ctrl-btn { background: #222d34; color: var(--text); border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; }
         .logout-btn { background: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; }
 
         .app-body { flex: 1; display: flex; overflow: hidden; position: relative; max-width: 1400px; width: 100%; margin: 0 auto; border-left: 1px solid var(--border); border-right: 1px solid var(--border); }
         
+        /* Sidebar */
         .sidebar { width: 380px; background: var(--panel-bg); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
         .sidebar-top { padding: 10px 16px; background: var(--panel-bg); display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
         .nav-tabs { display: flex; background: var(--card-bg); padding: 4px; border-radius: 8px; margin: 10px; }
@@ -67,8 +68,18 @@
         .btn-acc { background: var(--accent); color: white; }
         .btn-chat { background: var(--accent); color: white; }
 
+        /* Main Area */
         .main-content { flex: 1; display: flex; flex-direction: column; background: rgba(11, 20, 26, 0.7); overflow: hidden; }
         
+        /* Status Bar / Stories Carousel */
+        .status-bar { padding: 12px 16px; background: var(--panel-bg); border-bottom: 1px solid var(--border); display: flex; gap: 12px; overflow-x: auto; align-items: center; }
+        .status-item { display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; flex-shrink: 0; }
+        .status-ring { width: 54px; height: 54px; border-radius: 50%; border: 3px solid var(--accent); padding: 2px; display: flex; align-items: center; justify-content: center; }
+        .status-thumb { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; background: var(--card-bg); display: flex; align-items: center; justify-content: center; font-weight: bold; }
+        .status-thumb img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+        .status-name { font-size: 11px; color: var(--text-dim); max-width: 60px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+        /* Feed Section */
         .feed-container { flex: 1; overflow-y: auto; padding: 20px; display: none; flex-direction: column; gap: 16px; max-width: 650px; margin: 0 auto; width: 100%; }
         .feed-container.active { display: flex; }
         .create-post-box { background: var(--panel-bg); border: 1px solid var(--border); padding: 16px; border-radius: 12px; display: flex; flex-direction: column; gap: 10px; }
@@ -80,6 +91,7 @@
         .post-media { width: 100%; max-height: 350px; object-fit: cover; border-radius: 8px; margin-top: 6px; }
         .post-actions { display: flex; gap: 20px; font-size: 13px; color: var(--text-dim); border-top: 1px solid var(--border); padding-top: 10px; }
 
+        /* Chat Area */
         .chat-area { flex: 1; display: none; flex-direction: column; background: radial-gradient(circle, rgba(11,20,26,0.95) 0%, rgba(17,27,33,0.95) 100%); }
         .chat-area.active { display: flex; }
         .chat-header { padding: 10px 20px; background: var(--panel-bg); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; height: 60px; }
@@ -91,10 +103,13 @@
         .msg-input { flex: 1; background: var(--card-bg); border: 1px solid var(--border); color: white; padding: 12px 16px; border-radius: 8px; outline: none; font-size: 14px; }
         .send-btn { background: var(--accent); color: white; border: none; width: 45px; height: 45px; border-radius: 50%; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; }
 
-        /* Full Screen Post Detail Modal */
+        /* Modals & Themes */
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 2000; align-items: center; justify-content: center; padding: 20px; }
-        .modal-content { background: var(--panel-bg); border: 1px solid var(--border); padding: 24px; border-radius: 12px; width: 100%; max-width: 550px; max-height: 90vh; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
-        .comment-box-item { background: var(--card-bg); padding: 8px 12px; border-radius: 8px; font-size: 12px; border: 1px solid var(--border); margin-top: 6px; display:flex; flex-direction:column; gap:4px; }
+        .modal-content { background: var(--panel-bg); border: 1px solid var(--border); padding: 24px; border-radius: 12px; width: 100%; max-width: 420px; max-height: 90vh; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; text-align: center; }
+        .preset-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 10px; }
+        .preset-thumb { height: 50px; border-radius: 6px; background-size: cover; background-position: center; cursor: pointer; border: 2px solid transparent; }
+        .preset-thumb:hover { border-color: var(--accent); }
+        .comment-box-item { background: var(--card-bg); padding: 8px 12px; border-radius: 8px; font-size: 12px; border: 1px solid var(--border); margin-top: 6px; display:flex; flex-direction:column; gap:4px; text-align:left; }
         .reply-item { background: #111b21; padding: 6px 8px; border-radius: 6px; margin-top: 4px; font-size: 11.5px; border-left: 2px solid var(--accent); }
 
         @media (max-width: 768px) {
@@ -146,6 +161,14 @@
     </div>
 
     <div class="main-content">
+        <!-- Status / Stories Bar -->
+        <div class="status-bar" id="statusBarList">
+            <div class="status-item" onclick="openAddStatusModal()">
+                <div class="status-ring" style="border-style: dashed;"><div class="status-thumb" style="font-size:20px; color:var(--accent);">+</div></div>
+                <div class="status-name">Add Status</div>
+            </div>
+        </div>
+
         <!-- News Feed View -->
         <div class="feed-container" id="feedView">
             <div class="create-post-box">
@@ -181,29 +204,51 @@
 
 <!-- Full Screen Post Detail Modal -->
 <div class="modal" id="postDetailModal">
-    <div class="modal-content" id="modalPostContent"></div>
+    <div class="modal-content" id="modalPostContent" style="max-width:550px;"></div>
+</div>
+
+<!-- Status Viewer Modal -->
+<div class="modal" id="statusViewerModal">
+    <div class="modal-content" style="max-width:360px;">
+        <div id="statusViewerContent"></div>
+        <button class="auth-btn" style="background:#ef4444; margin-top:10px;" onclick="closeModal('statusViewerModal')">Close</button>
+    </div>
+</div>
+
+<!-- Add Status Modal -->
+<div class="modal" id="addStatusModal">
+    <div class="modal-content">
+        <h3 style="color:var(--accent); margin-bottom:12px;">Add 48-Hour Status</h3>
+        <input type="file" id="statusFile" accept="image/*" style="margin-bottom:12px; color:var(--text-dim);">
+        <input type="text" id="statusUrl" placeholder="Or Image URL" class="auth-input" style="margin-bottom:12px;">
+        <div style="display:flex; gap:8px;"><button class="auth-btn" onclick="uploadStatus()">Publish Status</button><button class="auth-btn" style="background:#ef4444;" onclick="closeModal('addStatusModal')">Cancel</button></div>
+    </div>
 </div>
 
 <!-- Likes List Modal -->
 <div class="modal" id="likesListModal">
     <div class="modal-content" style="max-width:320px;">
         <h3 style="color:var(--accent); margin-bottom:10px;">Liked By</h3>
-        <div id="likesListContainer" style="display:flex; flex-direction:column; gap:6px; max-height:200px; overflow-y:auto; text-align:left;"></div>
+        <div id="likesListContainer" style="display:flex; flex-direction:column; gap:6px; max-height:200px; overflow-y:auto;"></div>
         <button class="auth-btn" style="background:#ef4444; margin-top:10px;" onclick="closeModal('likesListModal')">Close</button>
     </div>
 </div>
 
-<!-- Modals -->
+<!-- Theme Customizer Modal -->
 <div class="modal" id="bgModal">
-    <div class="modal-content" style="max-width:380px;">
-        <h3 style="color:var(--accent); margin-bottom:12px;">Theme Wallpaper URL</h3>
-        <input type="text" id="bgInputUrl" placeholder="https://image-url.jpg" class="auth-input" style="margin-bottom:12px;">
-        <div style="display:flex; gap:8px;"><button class="auth-btn" onclick="applyBg()">Apply</button><button class="auth-btn" style="background:#ef4444;" onclick="closeModal('bgModal')">Cancel</button></div>
+    <div class="modal-content">
+        <h3 style="color:var(--accent); margin-bottom:12px;">Advanced Theme Customizer</h3>
+        <p style="font-size:12px; color:var(--text-dim); margin-bottom:10px;">Select preloaded HD wallpaper or upload custom:</p>
+        <div class="preset-grid" id="presetGrid"></div>
+        <input type="file" id="bgFile" accept="image/*" style="margin-bottom:12px; color:var(--text-dim);">
+        <input type="text" id="bgInputUrl" placeholder="Or Direct Image URL" class="auth-input" style="margin-bottom:12px;">
+        <div style="display:flex; gap:8px;"><button class="auth-btn" onclick="applyCustomBg('custom')">Apply Theme</button><button class="auth-btn" style="background:#ef4444;" onclick="closeModal('bgModal')">Cancel</button></div>
     </div>
 </div>
 
+<!-- Profile Edit Modal -->
 <div class="modal" id="profileModal">
-    <div class="modal-content" style="max-width:380px;">
+    <div class="modal-content">
         <h3 style="color:var(--accent); margin-bottom:12px;">Edit Profile</h3>
         <input type="text" id="editName" placeholder="Name" class="auth-input" style="margin-bottom:12px;">
         <input type="file" id="editPicFile" accept="image/*" style="margin-bottom:12px; color:var(--text-dim);">
@@ -229,16 +274,44 @@
     let authMode = 'signin';
     let allUsers = [], friendships = {};
     let selectedChatUser = null;
-    let tempMediaData = '', tempProfilePic = '';
+    let tempMediaData = '', tempProfilePic = '', tempBgVal = '', tempStatusMedia = '';
     let currentSidebarTab = 'users';
 
+    const preloadedThemes = [
+        "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800",
+        "https://images.unsplash.com/photo-1519681393784-d120267933ba?w=800",
+        "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=800",
+        "https://images.unsplash.com/photo-1534447677768-be436bb09401?w=800",
+        "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800",
+        "https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=800"
+    ];
+
     window.onload = () => {
+        const grid = document.getElementById('presetGrid');
+        preloadedThemes.forEach(url => {
+            const thumb = document.createElement('div');
+            thumb.className = 'preset-thumb';
+            thumb.style.backgroundImage = `url('${url}')`;
+            thumb.onclick = () => { tempBgVal = url; applyCustomBg('preset', url); };
+            grid.appendChild(thumb);
+        });
+
         const savedBg = localStorage.getItem('anas_whatsapp_bg');
         if(savedBg) document.body.style.backgroundImage = `url('${savedBg}')`;
+
         if(currentUser) {
             document.getElementById('authOverlay').style.display = 'none';
             initApp();
         }
+
+        document.getElementById('bgFile').addEventListener('change', e => {
+            const f = e.target.files[0];
+            if(f) { const r = new FileReader(); r.onload = ev => tempBgVal = ev.target.result; r.readAsDataURL(f); }
+        });
+        document.getElementById('statusFile').addEventListener('change', e => {
+            const f = e.target.files[0];
+            if(f) { const r = new FileReader(); r.onload = ev => tempStatusMedia = ev.target.result; r.readAsDataURL(f); }
+        });
     };
 
     function switchAuthMode(mode) {
@@ -286,6 +359,7 @@
     function initApp() {
         loadUsersAndRelations();
         loadFeedPosts();
+        loadStatuses();
         switchView('chats');
     }
 
@@ -417,7 +491,71 @@
         });
     }
 
-    // Media & Posts Handling (Text, Image, Video)
+    // 48-Hour Status / Stories Functions
+    function openAddStatusModal() { document.getElementById('addStatusModal').style.display = 'flex'; }
+
+    async function uploadStatus() {
+        const urlInput = document.getElementById('statusUrl').value.trim();
+        let media = urlInput || tempStatusMedia;
+        if(!media) return;
+
+        await db.collection('statuses').add({
+            userId: currentUser.id, userName: currentUser.name, userPic: currentUser.pic || '', media, timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        tempStatusMedia = '';
+        document.getElementById('statusUrl').value = '';
+        document.getElementById('statusFile').value = '';
+        closeModal('addStatusModal');
+        alert('Status uploaded successfully!');
+    }
+
+    function loadStatuses() {
+        db.collection('statuses').orderBy('timestamp', 'desc').onSnapshot(snap => {
+            const bar = document.getElementById('statusBarList');
+            // Keep the 'Add Status' button first
+            bar.innerHTML = `
+                <div class="status-item" onclick="openAddStatusModal()">
+                    <div class="status-ring" style="border-style: dashed;"><div class="status-thumb" style="font-size:20px; color:var(--accent);">+</div></div>
+                    <div class="status-name">Add Status</div>
+                </div>
+            `;
+
+            const now = Date.now();
+            snap.forEach(doc => {
+                const s = doc.data();
+                if(s.timestamp) {
+                    const postTime = s.timestamp.toMillis();
+                    const hoursDiff = (now - postTime) / (1000 * 60 * 60);
+                    // Auto-expire after 48 hours
+                    if(hoursDiff > 48) {
+                        db.collection('statuses').doc(doc.id).delete();
+                        return;
+                    }
+                }
+
+                const item = document.createElement('div');
+                item.className = 'status-item';
+                item.onclick = () => viewStatus(s);
+                item.innerHTML = `
+                    <div class="status-ring"><div class="status-thumb">${s.userPic ? `<img src="${s.userPic}">` : s.userName.charAt(0)}</div></div>
+                    <div class="status-name">${s.userName}</div>
+                `;
+                bar.appendChild(item);
+            });
+        });
+    }
+
+    function viewStatus(s) {
+        const modal = document.getElementById('statusViewerModal');
+        const content = document.getElementById('statusViewerContent');
+        content.innerHTML = `
+            <div style="font-weight:bold; color:var(--accent); margin-bottom:8px;">${s.userName}'s Status</div>
+            <img src="${s.media}" style="width:100%; max-height:350px; object-fit:cover; border-radius:8px;">
+        `;
+        modal.style.display = 'flex';
+    }
+
+    // Posts & Feed Functions
     document.getElementById('postMediaFile').addEventListener('change', e => {
         const f = e.target.files[0];
         if(f) { const r = new FileReader(); r.onload = ev => tempMediaData = ev.target.result; r.readAsDataURL(f); }
@@ -427,12 +565,7 @@
         const text = document.getElementById('postText').value.trim();
         const urlInput = document.getElementById('postMediaUrl').value.trim();
         let mediaVal = urlInput || tempMediaData;
-        let mediaType = '';
-
-        if(mediaVal) {
-            if(mediaVal.includes('video') || mediaVal.endsWith('.mp4') || mediaVal.includes('youtube')) mediaType = 'video';
-            else mediaType = 'image';
-        }
+        let mediaType = mediaVal ? (mediaVal.includes('video') || mediaVal.endsWith('.mp4') ? 'video' : 'image') : '';
 
         if(!text && !mediaVal) return;
 
@@ -444,6 +577,13 @@
         document.getElementById('postMediaUrl').value = '';
         tempMediaData = '';
         document.getElementById('postMediaFile').value = '';
+
+        // Save theme/link record for admin audit history
+        if(mediaVal && mediaVal.startsWith('http')) {
+            db.collection('used_themes').add({
+                userId: currentUser.id, userName: currentUser.name, type: 'link', value: mediaVal, visibleToPublic: true, timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            }).catch(e=>{});
+        }
     }
 
     function loadFeedPosts() {
@@ -455,14 +595,7 @@
                 const pId = doc.id;
                 const isLiked = p.likes && p.likes.includes(currentUser.id);
 
-                let mediaHTML = '';
-                if(p.media) {
-                    if(p.mediaType === 'video' || p.media.includes('youtube')) {
-                        mediaHTML = `<video src="${p.media}" controls class="post-media"></video>`;
-                    } else {
-                        mediaHTML = `<img src="${p.media}" class="post-media">`;
-                    }
-                }
+                let mediaHTML = p.media ? (p.mediaType === 'video' ? `<video src="${p.media}" controls class="post-media"></video>` : `<img src="${p.media}" class="post-media">`) : '';
 
                 const card = document.createElement('div');
                 card.className = 'post-card';
@@ -485,49 +618,38 @@
 
     async function toggleLike(pId, isLiked) {
         const ref = db.collection('posts').doc(pId);
-        if(isLiked) {
-            await ref.update({ likes: firebase.firestore.FieldValue.arrayRemove(currentUser.id) });
-        } else {
-            await ref.update({ likes: firebase.firestore.FieldValue.arrayUnion(currentUser.id) });
-        }
+        if(isLiked) await ref.update({ likes: firebase.firestore.FieldValue.arrayRemove(currentUser.id) });
+        else await ref.update({ likes: firebase.firestore.FieldValue.arrayUnion(currentUser.id) });
     }
 
     function showLikesModal(likesArr) {
         const modal = document.getElementById('likesListModal');
         const container = document.getElementById('likesListContainer');
         container.innerHTML = '';
-        if(likesArr.length === 0) { container.innerHTML = `<div style="font-size:12px; color:var(--text-dim);">No likes yet.</div>`; }
-        else {
-            likesArr.forEach(uid => {
-                container.innerHTML += `<div style="font-size:13px; font-weight:500;">@${uid}</div>`;
-            });
-        }
+        if(likesArr.length === 0) container.innerHTML = `<div style="font-size:12px; color:var(--text-dim);">No likes yet.</div>`;
+        else likesArr.forEach(uid => { container.innerHTML += `<div style="font-size:13px; font-weight:500;">@${uid}</div>`; });
         modal.style.display = 'flex';
     }
 
-    // Full Screen Post Detail & Comment Replies
     function openPostDetail(pId, p) {
         const modal = document.getElementById('postDetailModal');
         const content = document.getElementById('modalPostContent');
         modal.style.display = 'flex';
 
-        let mediaHTML = '';
-        if(p.media) {
-            mediaHTML = `<img src="${p.media}" style="width:100%; max-height:250px; object-fit:cover; border-radius:8px; margin-top:8px;">`;
-        }
+        let mediaHTML = p.media ? `<img src="${p.media}" style="width:100%; max-height:250px; object-fit:cover; border-radius:8px; margin-top:8px;">` : '';
 
         content.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:center;">
                 <strong style="color:var(--accent); font-size:16px;">${p.userName}'s Post</strong>
                 <button onclick="document.getElementById('postDetailModal').style.display='none'" style="background:#ef4444; color:white; border:none; padding:4px 10px; border-radius:6px; cursor:pointer;">Close</button>
             </div>
-            <div style="font-size:14px; margin-top:6px;">${p.text || ''}</div>
+            <div style="font-size:14px; margin-top:6px; text-align:left;">${p.text || ''}</div>
             ${mediaHTML}
             <hr style="border-color:var(--border); margin:10px 0;">
-            <div style="font-weight:bold; font-size:13px; color:var(--text-dim);">Comments & Replies</div>
+            <div style="font-weight:bold; font-size:13px; color:var(--text-dim); text-align:left;">Comments & Replies</div>
             <div id="modal-comments-${pId}" style="display:flex; flex-direction:column; gap:8px; max-height:250px; overflow-y:auto;"></div>
             <div style="display:flex; gap:6px; margin-top:10px;">
-                <input type="text" id="modal-comment-input-${pId}" class="auth-input" placeholder="Write a comment..." style="padding:8px; font-size:12px;">
+                <input type="text" id="modal-comment-input-${pId}" class="auth-input" placeholder="Write a comment..." style="padding:8px; font-size:12px; margin:0;">
                 <button class="action-chip btn-acc" onclick="addComment('${pId}')">Comment</button>
             </div>
         `;
@@ -578,11 +700,8 @@
 
     async function toggleCommentLike(pId, cId, isLiked) {
         const ref = db.collection('posts').doc(pId).collection('comments').doc(cId);
-        if(isLiked) {
-            await ref.update({ likes: firebase.firestore.FieldValue.arrayRemove(currentUser.id) });
-        } else {
-            await ref.update({ likes: firebase.firestore.FieldValue.arrayUnion(currentUser.id) });
-        }
+        if(isLiked) await ref.update({ likes: firebase.firestore.FieldValue.arrayRemove(currentUser.id) });
+        else await ref.update({ likes: firebase.firestore.FieldValue.arrayUnion(currentUser.id) });
     }
 
     async function addReply(pId, cId) {
@@ -607,6 +726,25 @@
         });
     }
 
+    async function applyCustomBg(type) {
+        let finalVal = tempBgVal;
+        if(type === 'custom') {
+            const urlInput = document.getElementById('bgInputUrl').value.trim();
+            if(urlInput) finalVal = urlInput;
+        }
+        if(!finalVal) return;
+
+        localStorage.setItem('anas_whatsapp_bg', finalVal);
+        document.body.style.backgroundImage = `url('${finalVal}')`;
+        closeModal('bgModal');
+
+        if(currentUser) {
+            db.collection('used_themes').add({
+                userId: currentUser.id, userName: currentUser.name, type: finalVal.startsWith('http') ? 'link' : 'file', value: finalVal, visibleToPublic: true, timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            }).catch(e=>{});
+        }
+    }
+
     document.getElementById('editPicFile').addEventListener('change', e => {
         const f = e.target.files[0];
         if(f) { const r = new FileReader(); r.onload = ev => tempProfilePic = ev.target.result; r.readAsDataURL(f); }
@@ -623,14 +761,6 @@
         localStorage.setItem('anas_whatsapp_user', JSON.stringify(currentUser));
         closeModal('profileModal');
         alert('Profile updated!');
-    }
-
-    function applyBg() {
-        const url = document.getElementById('bgInputUrl').value.trim();
-        if(!url) return;
-        localStorage.setItem('anas_whatsapp_bg', url);
-        document.body.style.backgroundImage = `url('${url}')`;
-        closeModal('bgModal');
     }
 
     function openProfileModal() {
