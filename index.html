@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Anas Chat - Pro Calling & Typing</title>
+    <title>Anas Chat - Real Voice, Video & WebRTC Pro</title>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
     <style>
@@ -97,7 +97,7 @@
 
         .messages-box { flex: 1; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; width: 100%; }
         
-        .msg { max-width: 75%; padding: 8px 12px; border-radius: 8px; font-size: 13.5px; word-wrap: break-word; position: relative; line-height: 1.4; display: flex; flex-direction: column; gap: 2px; }
+        .msg { max-width: 75%; padding: 8px 12px; border-radius: 8px; font-size: 13.5px; word-wrap: break-word; position: relative; line-height: 1.4; display: flex; flex-direction: column; gap: 4px; }
         .my-msg { align-self: flex-end; background: var(--outgoing); color: white; border-top-right-radius: 0; }
         .peer-msg { align-self: flex-start; background: var(--incoming); color: white; border-top-left-radius: 0; border: 1px solid var(--border); }
         .msg-meta { display: flex; align-items: center; justify-content: flex-end; gap: 4px; font-size: 10px; color: var(--text-dim); margin-top: 2px; }
@@ -108,14 +108,21 @@
         .msg-input { flex: 1; background: var(--card-bg); border: 1px solid var(--border); color: white; padding: 10px 14px; border-radius: 8px; outline: none; font-size: 14px; }
         .action-icon-btn { background: none; border: none; color: var(--text-dim); font-size: 20px; cursor: pointer; padding: 4px; }
         .action-icon-btn:hover { color: var(--accent); }
+        .recording-active { color: #ef4444 !important; animation: pulse 1s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+
         .send-btn { background: var(--accent); color: white; border: none; width: 42px; height: 42px; border-radius: 50%; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; }
 
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 3000; align-items: center; justify-content: center; padding: 20px; }
-        .modal-content { background: var(--panel-bg); border: 1px solid var(--border); padding: 20px; border-radius: 12px; width: 100%; max-width: 400px; max-height: 85vh; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; text-align: center; }
+        .modal-content { background: var(--panel-bg); border: 1px solid var(--border); padding: 20px; border-radius: 12px; width: 100%; max-width: 450px; max-height: 90vh; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; text-align: center; }
         .preset-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 10px; }
         .preset-thumb { height: 50px; border-radius: 6px; background-size: cover; background-position: center; cursor: pointer; border: 2px solid transparent; }
         .comment-box-item { background: var(--card-bg); padding: 8px 12px; border-radius: 8px; font-size: 12px; border: 1px solid var(--border); margin-top: 6px; display:flex; flex-direction:column; gap:4px; text-align:left; }
         .reply-item { background: #111b21; padding: 6px 8px; border-radius: 6px; margin-top: 4px; font-size: 11.5px; border-left: 2px solid var(--accent); }
+
+        /* Video Call Elements */
+        .video-grid { display: grid; grid-template-columns: 1fr; gap: 10px; background: #000; border-radius: 8px; overflow: hidden; min-height: 250px; position: relative; }
+        .video-grid video { width: 100%; height: 220px; object-fit: cover; background: #111; }
 
         @media (max-width: 768px) {
             .sidebar { position: absolute; inset: 0; z-index: 5; width: 100%; display: flex; }
@@ -132,7 +139,7 @@
 <div id="authOverlay">
     <div class="auth-box">
         <h1>Anas Chat</h1>
-        <p>WhatsApp & Community Portal</p>
+        <p>Real WebRTC & Voice Note Portal</p>
         <div class="auth-tabs">
             <button class="auth-tab active" id="btnTabSignIn" onclick="switchAuthMode('signin')">Sign In</button>
             <button class="auth-tab" id="btnTabSignUp" onclick="switchAuthMode('signup')">Sign Up</button>
@@ -148,7 +155,7 @@
 </div>
 
 <header>
-    <div class="logo">💬 ANAS CHAT</div>
+    <div class="logo">💬 ANAS CHAT PRO</div>
     <div class="header-controls">
         <button class="ctrl-btn" onclick="switchView('feed')">📰 Feed</button>
         <button class="ctrl-btn" onclick="switchView('chats')">💬 Chats</button>
@@ -200,15 +207,15 @@
                     <div id="chatHeaderStatus" style="font-size:10.5px; color:var(--text-dim);">offline</div>
                 </div>
                 <div class="call-icons">
-                    <button class="call-btn" onclick="startCall('voice')" title="Voice Call">📞</button>
-                    <button class="call-btn" onclick="startCall('video')" title="Video Call">📹</button>
+                    <button class="call-btn" onclick="startWebRTCCall('audio')" title="Voice Call">📞</button>
+                    <button class="call-btn" onclick="startWebRTCCall('video')" title="Video Call">📹</button>
                 </div>
             </div>
             <div class="messages-box" id="messagesContainer">
                 <div style="margin:auto; color:var(--text-dim); text-align:center; padding:20px;">Friend request accept hone ke baad chat shuru hogi.</div>
             </div>
             <div class="input-bar">
-                <button class="action-icon-btn" onclick="recordVoiceNote()" title="Record Voice Note">🎤</button>
+                <button class="action-icon-btn" id="micBtn" onclick="toggleVoiceRecording()" title="Record Voice Note">🎤</button>
                 <input type="text" id="msgInput" class="msg-input" placeholder="Type a message..." oninput="handleTypingInput()" disabled>
                 <button class="send-btn" id="sendBtn" onclick="sendMessage()" disabled>➤</button>
             </div>
@@ -265,11 +272,16 @@
     </div>
 </div>
 
+<!-- Real WebRTC Call Modal -->
 <div class="modal" id="callModal">
     <div class="modal-content" style="text-align:center;">
-        <h3 id="callTitle" style="color:var(--accent);">Calling...</h3>
-        <div id="callStatusDesc" style="font-size:13px; color:var(--text-dim); margin:10px 0;">Connecting secure audio/video stream...</div>
-        <button class="auth-btn" style="background:#ef4444;" onclick="endCall()">End Call</button>
+        <h3 id="callTitle" style="color:var(--accent);">Active Call</h3>
+        <div class="video-grid">
+            <video id="localVideo" autoplay muted playsinline></video>
+            <video id="remoteVideo" autoplay playsinline></video>
+        </div>
+        <div id="callStatusDesc" style="font-size:12px; color:var(--text-dim); margin:5px 0;">Connected via WebRTC</div>
+        <button class="auth-btn" style="background:#ef4444;" onclick="endWebRTCCall()">End Call</button>
     </div>
 </div>
 
@@ -294,6 +306,16 @@
     let currentSidebarTab = 'users';
     let peerOnlineStatus = 'offline';
     let typingTimeout = null;
+
+    // Voice Recorder Variables
+    let mediaRecorder = null;
+    let audioChunks = [];
+    let isRecording = false;
+
+    // WebRTC Call Variables
+    let peerConnection = null;
+    let localStream = null;
+    const rtcConfig = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
 
     const preloadedThemes = [
         "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800",
@@ -496,6 +518,7 @@
         document.getElementById('sendBtn').disabled = false;
         loadMessages(peerId);
         listenTyping(peerId);
+        listenWebRTCRequests(peerId);
 
         if(window.innerWidth <= 768) {
             document.getElementById('sidebarPanel').classList.add('mobile-hidden');
@@ -514,9 +537,7 @@
     function handleTypingInput() {
         if(!selectedChatUser) return;
         const chatId = [currentUser.id, selectedChatUser].sort().join('_');
-        db.collection('chats').doc(chatId).set({
-            typingUser: currentUser.id
-        }, { merge: true });
+        db.collection('chats').doc(chatId).set({ typingUser: currentUser.id }, { merge: true });
 
         clearTimeout(typingTimeout);
         typingTimeout = setTimeout(() => {
@@ -538,33 +559,178 @@
         });
     }
 
-    // Voice Note Simulation
-    function recordVoiceNote() {
+    // REAL VOICE NOTE RECORDING (MediaRecorder API)
+    async function toggleVoiceRecording() {
         if(!selectedChatUser) return;
-        if(confirm("🎤 Record and send Voice Note?")) {
-            const chatId = [currentUser.id, selectedChatUser].sort().join('_');
-            const timeNow = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            db.collection('chats').doc(chatId).collection('messages').add({
-                sender: currentUser.id,
-                receiver: selectedChatUser,
-                text: "🎵 [Voice Message - 0:12]",
-                time: timeNow,
-                seen: false,
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            });
+        const micBtn = document.getElementById('micBtn');
+
+        if(!isRecording) {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+
+                mediaRecorder.ondataavailable = e => { audioChunks.push(e.data); };
+                mediaRecorder.onstop = async () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    const reader = new FileReader();
+                    reader.readAsDataURL(audioBlob);
+                    reader.onloadend = async () => {
+                        const base64Audio = reader.result;
+                        const chatId = [currentUser.id, selectedChatUser].sort().join('_');
+                        const timeNow = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                        
+                        await db.collection('chats').doc(chatId).collection('messages').add({
+                            sender: currentUser.id,
+                            receiver: selectedChatUser,
+                            audio: base64Audio,
+                            time: timeNow,
+                            seen: false,
+                            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                    };
+                };
+
+                mediaRecorder.start();
+                isRecording = true;
+                micBtn.classList.add('recording-active');
+                micBtn.title = "Recording... Click to Stop & Send";
+            } catch (err) {
+                alert("Microphone permission denied or not supported!");
+            }
+        } else {
+            mediaRecorder.stop();
+            isRecording = false;
+            micBtn.classList.remove('recording-active');
+            micBtn.title = "Record Voice Note";
         }
     }
 
-    // Voice & Video Call Handlers
-    function startCall(type) {
-        const modal = document.getElementById('callModal');
-        document.getElementById('callTitle').innerText = type === 'video' ? '📹 Video Calling...' : '📞 Voice Calling...';
-        document.getElementById('callStatusDesc').innerText = 'Ringing... waiting for response';
-        modal.style.display = 'flex';
+    // REAL WebRTC AUDIO & VIDEO CALL
+    async function startWebRTCCall(type) {
+        if(!selectedChatUser) return;
+        document.getElementById('callTitle').innerText = type === 'video' ? '📹 Video Call' : '📞 Voice Call';
+        document.getElementById('callModal').style.display = 'flex';
+
+        try {
+            localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: type === 'video' });
+            document.getElementById('localVideo').srcObject = localStream;
+
+            peerConnection = new RTCPeerConnection(rtcConfig);
+            localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+
+            peerConnection.ontrack = e => {
+                document.getElementById('remoteVideo').srcObject = e.streams[0];
+            };
+
+            const callId = [currentUser.id, selectedChatUser].sort().join('_');
+            const offerDocRef = db.collection('calls').doc(callId);
+
+            peerConnection.onicecandidate = e => {
+                if (e.candidate) {
+                    offerDocRef.collection('candidates').add(e.candidate.toJSON());
+                }
+            };
+
+            const offer = await peerConnection.createOffer();
+            await peerConnection.setLocalDescription(offer);
+
+            await offerDocRef.set({
+                caller: currentUser.id,
+                receiver: selectedChatUser,
+                offer: { type: offer.type, sdp: offer.sdp },
+                type: type
+            });
+
+            // Listen for answer
+            offerDocRef.onSnapshot(async doc => {
+                const data = doc.data();
+                if (data && data.answer && !peerConnection.currentRemoteDescription) {
+                    await peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
+                }
+            });
+
+            offerDocRef.collection('candidates').onSnapshot(snap => {
+                snap.docChanges().forEach(change => {
+                    if (change.type === 'added') {
+                        const candidate = new RTCIceCandidate(change.doc.data());
+                        peerConnection.addIceCandidate(candidate);
+                    }
+                });
+            });
+
+        } catch (err) {
+            alert("Camera/Mic error or permissions denied!");
+            endWebRTCCall();
+        }
     }
 
-    function endCall() {
+    async function listenWebRTCRequests(peerId) {
+        const callId = [currentUser.id, peerId].sort().join('_');
+        db.collection('calls').doc(callId).onSnapshot(async doc => {
+            const data = doc.data();
+            if (data && data.receiver === currentUser.id && data.offer && !peerConnection) {
+                if (confirm(`Incoming ${data.type} call from @${data.caller}. Accept?`)) {
+                    document.getElementById('callTitle').innerText = `Incoming ${data.type} Call`;
+                    document.getElementById('callModal').style.display = 'flex';
+
+                    try {
+                        localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: data.type === 'video' });
+                        document.getElementById('localVideo').srcObject = localStream;
+
+                        peerConnection = new RTCPeerConnection(rtcConfig);
+                        localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+
+                        peerConnection.ontrack = e => {
+                            document.getElementById('remoteVideo').srcObject = e.streams[0];
+                        };
+
+                        peerConnection.onicecandidate = e => {
+                            if (e.candidate) {
+                                db.collection('calls').doc(callId).collection('candidates').add(e.candidate.toJSON());
+                            }
+                        };
+
+                        await peerConnection.setRemoteDescription(new RTCSessionDescription(data.offer));
+                        const answer = await peerConnection.createAnswer();
+                        await peerConnection.setLocalDescription(answer);
+
+                        await db.collection('calls').doc(callId).update({
+                            answer: { type: answer.type, sdp: answer.sdp }
+                        });
+
+                        db.collection('calls').doc(callId).collection('candidates').onSnapshot(snap => {
+                            snap.docChanges().forEach(change => {
+                                if (change.type === 'added') {
+                                    const candidate = new RTCIceCandidate(change.doc.data());
+                                    peerConnection.addIceCandidate(candidate);
+                                }
+                            });
+                        });
+                    } catch(err) {
+                        alert("Call connection failed!");
+                    }
+                }
+            }
+        });
+    }
+
+    function endWebRTCCall() {
+        if(localStream) {
+            localStream.getTracks().forEach(track => track.stop());
+        }
+        if(peerConnection) {
+            peerConnection.close();
+            peerConnection = null;
+        }
+        document.getElementById('localVideo').srcObject = null;
+        document.getElementById('remoteVideo').srcObject = null;
         document.getElementById('callModal').style.display = 'none';
+        
+        if(selectedChatUser) {
+            const callId = [currentUser.id, selectedChatUser].sort().join('_');
+            db.collection('calls').doc(callId).delete().catch(e=>{});
+        }
     }
 
     async function sendMessage() {
@@ -609,10 +775,17 @@
                     tickHTML = `<span class="${tickClass}">${ticks}</span>`;
                 }
 
+                let contentHTML = '';
+                if(m.audio) {
+                    contentHTML = `<audio controls src="${m.audio}" style="max-width:200px; height:35px;"></audio>`;
+                } else {
+                    contentHTML = `<div>${m.text}</div>`;
+                }
+
                 const div = document.createElement('div');
                 div.className = `msg ${isMine ? 'my-msg' : 'peer-msg'}`;
                 div.innerHTML = `
-                    <div>${m.text}</div>
+                    ${contentHTML}
                     <div class="msg-meta">
                         <span>${m.time || ''}</span>
                         ${tickHTML}
@@ -654,11 +827,9 @@
             const now = Date.now();
             snap.forEach(doc => {
                 const s = doc.data();
-                if(s.timestamp) {
-                    if((now - s.timestamp.toMillis()) / (1000 * 60 * 60) > 48) {
-                        db.collection('statuses').doc(doc.id).delete();
-                        return;
-                    }
+                if(s.timestamp && (now - s.timestamp.toMillis()) / (1000 * 60 * 60) > 48) {
+                    db.collection('statuses').doc(doc.id).delete();
+                    return;
                 }
                 const item = document.createElement('div');
                 item.className = 'status-item';
