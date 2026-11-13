@@ -25,6 +25,9 @@
         header { background: #0f172a; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1e293b; }
         .logo { font-size: 20px; font-weight: 800; color: #f59e0b; display: flex; align-items: center; gap: 8px; }
         .badge { background: #f59e0b; color: #020617; font-size: 11px; padding: 2px 8px; border-radius: 4px; font-weight: 800; }
+        .header-btns { display: flex; gap: 10px; align-items: center; }
+        .btn-profile { background: #334155; color: white; border: none; padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: bold; }
+        .btn-profile:hover { background: #475569; }
         .logout-btn { background: #ef4444; color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: bold; }
 
         /* Dashboard Container */
@@ -33,6 +36,12 @@
         .stat-card { background: #1e293b; border: 1px solid #334155; padding: 20px; border-radius: 12px; display: flex; flex-direction: column; gap: 6px; }
         .stat-title { font-size: 12px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; }
         .stat-value { font-size: 28px; font-weight: bold; color: #38bdf8; }
+
+        /* Admin Profile Edit Card */
+        .profile-card { background: #1e293b; border: 1px solid #334155; padding: 20px; border-radius: 12px; display: none; flex-direction: column; gap: 15px; }
+        .profile-card h3 { color: #f59e0b; font-size: 16px; }
+        .profile-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+        .btn-save { background: #10b981; color: #020617; border: none; padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer; }
 
         .table-card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; }
         .table-header { padding: 18px 20px; background: #131c31; border-bottom: 1px solid #334155; font-size: 16px; font-weight: bold; color: #f8fafc; display: flex; justify-content: space-between; align-items: center; }
@@ -78,10 +87,37 @@
 <!-- ADMIN DASHBOARD -->
 <header>
     <div class="logo">ANAS CHAT <span class="badge">ADMIN DASHBOARD</span></div>
-    <button class="logout-btn" onclick="adminLogout()">Log Out</button>
+    <div class="header-btns">
+        <button class="btn-profile" onclick="toggleProfileEdit()">⚙️ Edit Profile</button>
+        <button class="logout-btn" onclick="adminLogout()">Log Out</button>
+    </div>
 </header>
 
 <div class="container">
+    <!-- Admin Profile Settings Box -->
+    <div class="profile-card" id="profileEditBox">
+        <h3>⚙️ Admin Profile Settings</h3>
+        <div class="profile-grid">
+            <div class="form-group">
+                <label>Admin Name</label>
+                <input type="text" id="editAdminName" class="input-field">
+            </div>
+            <div class="form-group">
+                <label>Username</label>
+                <input type="text" id="editAdminUser" class="input-field">
+            </div>
+            <div class="form-group">
+                <label>Phone Number</label>
+                <input type="text" id="editAdminPhone" class="input-field" placeholder="e.g. +923001234567">
+            </div>
+            <div class="form-group">
+                <label>New Password</label>
+                <input type="password" id="editAdminPass" class="input-field" placeholder="New Password">
+            </div>
+        </div>
+        <button class="btn-save" onclick="saveAdminProfile()">Save Profile Changes</button>
+    </div>
+
     <div class="stats-row">
         <div class="stat-card">
             <div class="stat-title">Total Registered Users</div>
@@ -120,14 +156,23 @@
 </div>
 
 <script>
-    // Pre-made Admin Credentials
-    const MASTER_USER = 'anas_admin_99';
-    const MASTER_PASS = 'super_secret_admin_786';
+    // Default Admin credentials setup
+    const DEFAULT_ADMIN = {
+        user: 'anas_admin_99',
+        pass: 'super_secret_admin_786',
+        name: 'Super Admin',
+        phone: '+92 300 0000000'
+    };
 
     window.addEventListener('DOMContentLoaded', () => {
+        if (!localStorage.getItem('anas_admin_creds')) {
+            localStorage.setItem('anas_admin_creds', JSON.stringify(DEFAULT_ADMIN));
+        }
+
         if (localStorage.getItem('anas_admin_logged_in') === 'true') {
             document.getElementById('adminLoginBox').style.display = 'none';
             loadUsersTable();
+            initProfileFields();
         }
     });
 
@@ -136,10 +181,13 @@
         const p = document.getElementById('adminPass').value.trim();
         const err = document.getElementById('loginError');
 
-        if (u === MASTER_USER && p === MASTER_PASS) {
+        const adminCreds = JSON.parse(localStorage.getItem('anas_admin_creds'));
+
+        if (u === adminCreds.user && p === adminCreds.pass) {
             localStorage.setItem('anas_admin_logged_in', 'true');
             document.getElementById('adminLoginBox').style.display = 'none';
             loadUsersTable();
+            initProfileFields();
         } else {
             err.innerText = 'Invalid Admin Username or Password!';
         }
@@ -150,8 +198,39 @@
         location.reload();
     }
 
+    function toggleProfileEdit() {
+        const box = document.getElementById('profileEditBox');
+        box.style.display = box.style.display === 'flex' ? 'none' : 'flex';
+    }
+
+    function initProfileFields() {
+        const adminCreds = JSON.parse(localStorage.getItem('anas_admin_creds'));
+        document.getElementById('editAdminName').value = adminCreds.name || '';
+        document.getElementById('editAdminUser').value = adminCreds.user || '';
+        document.getElementById('editAdminPhone').value = adminCreds.phone || '';
+        document.getElementById('editAdminPass').value = adminCreds.pass || '';
+    }
+
+    function saveAdminProfile() {
+        const name = document.getElementById('editAdminName').value.trim();
+        const user = document.getElementById('editAdminUser').value.trim();
+        const phone = document.getElementById('editAdminPhone').value.trim();
+        const pass = document.getElementById('editAdminPass').value.trim();
+
+        if (!user || !pass) {
+            alert('Username and Password cannot be empty!');
+            return;
+        }
+
+        const updatedCreds = { name, user, phone, pass };
+        localStorage.setItem('anas_admin_creds', JSON.stringify(updatedCreds));
+        alert('Admin profile updated successfully!');
+        toggleProfileEdit();
+    }
+
     function loadUsersTable() {
         const db = JSON.parse(localStorage.getItem('anas_accounts_db') || '{}');
+        const adminCreds = JSON.parse(localStorage.getItem('anas_admin_creds'));
         const tbody = document.getElementById('usersTableBody');
         tbody.innerHTML = '';
 
@@ -159,8 +238,7 @@
         const keys = Object.keys(db);
 
         keys.forEach(uid => {
-            // Skip showing the super admin in user list
-            if (uid === MASTER_USER) return;
+            if (uid === adminCreds.user) return;
 
             total++;
             const usr = db[uid];
