@@ -77,7 +77,7 @@
         .post-card { background: var(--panel-bg); border: 1px solid var(--border); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); cursor: pointer; transition: 0.2s; position: relative; }
         .post-card:hover { border-color: var(--accent); }
         .featured-badge { position: absolute; top: 12px; right: 12px; background: #f59e0b; color: #020617; font-size: 10px; font-weight: bold; padding: 2px 8px; border-radius: 4px; }
-        .post-img { width: 100%; max-height: 350px; object-fit: cover; border-radius: 8px; margin-top: 6px; }
+        .post-media { width: 100%; max-height: 350px; object-fit: cover; border-radius: 8px; margin-top: 6px; }
         .post-actions { display: flex; gap: 20px; font-size: 13px; color: var(--text-dim); border-top: 1px solid var(--border); padding-top: 10px; }
 
         .chat-area { flex: 1; display: none; flex-direction: column; background: radial-gradient(circle, rgba(11,20,26,0.95) 0%, rgba(17,27,33,0.95) 100%); }
@@ -94,7 +94,8 @@
         /* Full Screen Post Detail Modal */
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 2000; align-items: center; justify-content: center; padding: 20px; }
         .modal-content { background: var(--panel-bg); border: 1px solid var(--border); padding: 24px; border-radius: 12px; width: 100%; max-width: 550px; max-height: 90vh; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
-        .comment-item { background: var(--card-bg); padding: 8px 12px; border-radius: 8px; font-size: 12px; border: 1px solid var(--border); margin-top: 4px; }
+        .comment-box-item { background: var(--card-bg); padding: 8px 12px; border-radius: 8px; font-size: 12px; border: 1px solid var(--border); margin-top: 6px; display:flex; flex-direction:column; gap:4px; }
+        .reply-item { background: #111b21; padding: 6px 8px; border-radius: 6px; margin-top: 4px; font-size: 11.5px; border-left: 2px solid var(--accent); }
 
         @media (max-width: 768px) {
             .sidebar { position: absolute; inset: 0; z-index: 10; width: 100%; display: flex; }
@@ -148,9 +149,10 @@
         <!-- News Feed View -->
         <div class="feed-container" id="feedView">
             <div class="create-post-box">
-                <textarea id="postText" placeholder="Share something with community..."></textarea>
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <input type="file" id="postImageFile" accept="image/*" style="font-size:11px; color:var(--text-dim);">
+                <textarea id="postText" placeholder="What's on your mind, text or video/image link..."></textarea>
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                    <input type="file" id="postMediaFile" accept="image/*,video/*" style="font-size:11px; color:var(--text-dim);">
+                    <input type="text" id="postMediaUrl" placeholder="Or Video/Image URL" class="auth-input" style="flex:1; max-width:220px; padding:6px; font-size:12px; margin:0;">
                     <button class="action-chip btn-acc" onclick="createPost()">Post</button>
                 </div>
             </div>
@@ -179,8 +181,15 @@
 
 <!-- Full Screen Post Detail Modal -->
 <div class="modal" id="postDetailModal">
-    <div class="modal-content" id="modalPostContent">
-        <!-- Loaded dynamically -->
+    <div class="modal-content" id="modalPostContent"></div>
+</div>
+
+<!-- Likes List Modal -->
+<div class="modal" id="likesListModal">
+    <div class="modal-content" style="max-width:320px;">
+        <h3 style="color:var(--accent); margin-bottom:10px;">Liked By</h3>
+        <div id="likesListContainer" style="display:flex; flex-direction:column; gap:6px; max-height:200px; overflow-y:auto; text-align:left;"></div>
+        <button class="auth-btn" style="background:#ef4444; margin-top:10px;" onclick="closeModal('likesListModal')">Close</button>
     </div>
 </div>
 
@@ -218,16 +227,14 @@
 
     let currentUser = JSON.parse(localStorage.getItem('anas_whatsapp_user')) || null;
     let authMode = 'signin';
-    let allUsers = [];
-    let friendships = {};
+    let allUsers = [], friendships = {};
     let selectedChatUser = null;
-    let tempPostImg = '', tempProfilePic = '';
+    let tempMediaData = '', tempProfilePic = '';
     let currentSidebarTab = 'users';
 
     window.onload = () => {
         const savedBg = localStorage.getItem('anas_whatsapp_bg');
         if(savedBg) document.body.style.backgroundImage = `url('${savedBg}')`;
-
         if(currentUser) {
             document.getElementById('authOverlay').style.display = 'none';
             initApp();
@@ -410,21 +417,33 @@
         });
     }
 
-    // Feed Posts Functions with High Ranking Support
-    document.getElementById('postImageFile').addEventListener('change', e => {
+    // Media & Posts Handling (Text, Image, Video)
+    document.getElementById('postMediaFile').addEventListener('change', e => {
         const f = e.target.files[0];
-        if(f) { const r = new FileReader(); r.onload = ev => tempPostImg = ev.target.result; r.readAsDataURL(f); }
+        if(f) { const r = new FileReader(); r.onload = ev => tempMediaData = ev.target.result; r.readAsDataURL(f); }
     });
 
     async function createPost() {
         const text = document.getElementById('postText').value.trim();
-        if(!text && !tempPostImg) return;
+        const urlInput = document.getElementById('postMediaUrl').value.trim();
+        let mediaVal = urlInput || tempMediaData;
+        let mediaType = '';
+
+        if(mediaVal) {
+            if(mediaVal.includes('video') || mediaVal.endsWith('.mp4') || mediaVal.includes('youtube')) mediaType = 'video';
+            else mediaType = 'image';
+        }
+
+        if(!text && !mediaVal) return;
+
         await db.collection('posts').add({
-            userId: currentUser.id, userName: currentUser.name, text, image: tempPostImg, likes: [], highRank: false, timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            userId: currentUser.id, userName: currentUser.name, text, media: mediaVal, mediaType, likes: [], highRank: false, timestamp: firebase.firestore.FieldValue.serverTimestamp()
         });
+
         document.getElementById('postText').value = '';
-        tempPostImg = '';
-        document.getElementById('postImageFile').value = '';
+        document.getElementById('postMediaUrl').value = '';
+        tempMediaData = '';
+        document.getElementById('postMediaFile').value = '';
     }
 
     function loadFeedPosts() {
@@ -436,6 +455,15 @@
                 const pId = doc.id;
                 const isLiked = p.likes && p.likes.includes(currentUser.id);
 
+                let mediaHTML = '';
+                if(p.media) {
+                    if(p.mediaType === 'video' || p.media.includes('youtube')) {
+                        mediaHTML = `<video src="${p.media}" controls class="post-media"></video>`;
+                    } else {
+                        mediaHTML = `<img src="${p.media}" class="post-media">`;
+                    }
+                }
+
                 const card = document.createElement('div');
                 card.className = 'post-card';
                 card.onclick = () => openPostDetail(pId, p);
@@ -443,10 +471,11 @@
                     ${p.highRank ? '<div class="featured-badge">⭐ Featured / High Rank</div>' : ''}
                     <div style="font-weight:bold; color:var(--accent); font-size:14px;">${p.userName}</div>
                     <div style="font-size:13.5px; margin-top:4px;">${p.text || ''}</div>
-                    ${p.image ? `<img src="${p.image}" class="post-img">` : ''}
+                    ${mediaHTML}
                     <div class="post-actions" onclick="event.stopPropagation()">
-                        <span onclick="toggleLike('${pId}', ${isLiked})">${isLiked ? '❤️ Liked' : '🤍 Like'} (${p.likes ? p.likes.length : 0})</span>
-                        <span>💬 Click to View Full Post</span>
+                        <span onclick="toggleLike('${pId}', ${isLiked})" style="cursor:pointer;">${isLiked ? '❤️ Liked' : '🤍 Like'}</span>
+                        <span onclick="showLikesModal(${JSON.stringify(p.likes || [])})" style="cursor:pointer; color:var(--accent);">${p.likes ? p.likes.length : 0} Likes</span>
+                        <span style="margin-left:auto;">💬 Click to View & Reply</span>
                     </div>
                 `;
                 list.appendChild(card);
@@ -463,11 +492,29 @@
         }
     }
 
-    // Full Screen Post Detail View Modal
+    function showLikesModal(likesArr) {
+        const modal = document.getElementById('likesListModal');
+        const container = document.getElementById('likesListContainer');
+        container.innerHTML = '';
+        if(likesArr.length === 0) { container.innerHTML = `<div style="font-size:12px; color:var(--text-dim);">No likes yet.</div>`; }
+        else {
+            likesArr.forEach(uid => {
+                container.innerHTML += `<div style="font-size:13px; font-weight:500;">@${uid}</div>`;
+            });
+        }
+        modal.style.display = 'flex';
+    }
+
+    // Full Screen Post Detail & Comment Replies
     function openPostDetail(pId, p) {
         const modal = document.getElementById('postDetailModal');
         const content = document.getElementById('modalPostContent');
         modal.style.display = 'flex';
+
+        let mediaHTML = '';
+        if(p.media) {
+            mediaHTML = `<img src="${p.media}" style="width:100%; max-height:250px; object-fit:cover; border-radius:8px; margin-top:8px;">`;
+        }
 
         content.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -475,13 +522,13 @@
                 <button onclick="document.getElementById('postDetailModal').style.display='none'" style="background:#ef4444; color:white; border:none; padding:4px 10px; border-radius:6px; cursor:pointer;">Close</button>
             </div>
             <div style="font-size:14px; margin-top:6px;">${p.text || ''}</div>
-            ${p.image ? `<img src="${p.image}" style="width:100%; max-height:350px; object-fit:cover; border-radius:8px; margin-top:8px;">` : ''}
+            ${mediaHTML}
             <hr style="border-color:var(--border); margin:10px 0;">
-            <div style="font-weight:bold; font-size:13px; color:var(--text-dim);">Comments</div>
-            <div id="modal-comments-${pId}" style="display:flex; flex-direction:column; gap:6px; max-height:200px; overflow-y:auto;"></div>
+            <div style="font-weight:bold; font-size:13px; color:var(--text-dim);">Comments & Replies</div>
+            <div id="modal-comments-${pId}" style="display:flex; flex-direction:column; gap:8px; max-height:250px; overflow-y:auto;"></div>
             <div style="display:flex; gap:6px; margin-top:10px;">
                 <input type="text" id="modal-comment-input-${pId}" class="auth-input" placeholder="Write a comment..." style="padding:8px; font-size:12px;">
-                <button class="action-chip btn-acc" onclick="addModalComment('${pId}')">Reply</button>
+                <button class="action-chip btn-acc" onclick="addComment('${pId}')">Comment</button>
             </div>
         `;
         loadModalComments(pId);
@@ -493,24 +540,71 @@
             if(!box) return;
             box.innerHTML = '';
             if(snap.empty) { box.innerHTML = `<div style="font-size:12px; color:var(--text-dim);">No comments yet.</div>`; return; }
+            
             snap.forEach(d => {
                 const c = d.data();
-                const div = document.createElement('div');
-                div.className = 'comment-item';
-                div.innerHTML = `<strong>${c.userName}:</strong> ${c.text}`;
-                box.appendChild(div);
+                const cId = d.id;
+                const isC_Liked = c.likes && c.likes.includes(currentUser.id);
+
+                const commentDiv = document.createElement('div');
+                commentDiv.className = 'comment-box-item';
+                commentDiv.innerHTML = `
+                    <div style="display:flex; justify-content:space-between;">
+                        <strong>${c.userName}</strong>
+                        <span onclick="toggleCommentLike('${pId}', '${cId}', ${isC_Liked})" style="cursor:pointer; color:${isC_Liked ? '#ef4444' : 'var(--text-dim)'};">${isC_Liked ? '❤️' : '🤍'} (${c.likes ? c.likes.length : 0})</span>
+                    </div>
+                    <div>${c.text}</div>
+                    <div id="replies-${pId}-${cId}" style="margin-left:12px; display:flex; flex-direction:column; gap:4px;"></div>
+                    <div style="display:flex; gap:4px; margin-top:4px;">
+                        <input type="text" id="reply-input-${pId}-${cId}" placeholder="Reply..." style="flex:1; background:#0b141a; border:1px solid var(--border); color:white; padding:4px 8px; border-radius:4px; font-size:11px;">
+                        <button onclick="addReply('${pId}', '${cId}')" style="background:var(--accent); color:white; border:none; padding:4px 8px; border-radius:4px; font-size:11px; cursor:pointer;">Reply</button>
+                    </div>
+                `;
+                box.appendChild(commentDiv);
+                loadReplies(pId, cId);
             });
         });
     }
 
-    async function addModalComment(pId) {
+    async function addComment(pId) {
         const input = document.getElementById(`modal-comment-input-${pId}`);
         const text = input.value.trim();
         if(!text) return;
         await db.collection('posts').doc(pId).collection('comments').add({
+            userId: currentUser.id, userName: currentUser.name, text, likes: [], timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        input.value = '';
+    }
+
+    async function toggleCommentLike(pId, cId, isLiked) {
+        const ref = db.collection('posts').doc(pId).collection('comments').doc(cId);
+        if(isLiked) {
+            await ref.update({ likes: firebase.firestore.FieldValue.arrayRemove(currentUser.id) });
+        } else {
+            await ref.update({ likes: firebase.firestore.FieldValue.arrayUnion(currentUser.id) });
+        }
+    }
+
+    async function addReply(pId, cId) {
+        const input = document.getElementById(`reply-input-${pId}-${cId}`);
+        const text = input.value.trim();
+        if(!text) return;
+        await db.collection('posts').doc(pId).collection('comments').doc(cId).collection('replies').add({
             userId: currentUser.id, userName: currentUser.name, text, timestamp: firebase.firestore.FieldValue.serverTimestamp()
         });
         input.value = '';
+    }
+
+    function loadReplies(pId, cId) {
+        db.collection('posts').doc(pId).collection('comments').doc(cId).collection('replies').orderBy('timestamp', 'asc').onSnapshot(snap => {
+            const rBox = document.getElementById(`replies-${pId}-${cId}`);
+            if(!rBox) return;
+            rBox.innerHTML = '';
+            snap.forEach(d => {
+                const rep = d.data();
+                rBox.innerHTML += `<div class="reply-item"><strong>${rep.userName}:</strong> ${rep.text}</div>`;
+            });
+        });
     }
 
     document.getElementById('editPicFile').addEventListener('change', e => {
